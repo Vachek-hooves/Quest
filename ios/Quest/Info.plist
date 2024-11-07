@@ -54,6 +54,10 @@
   		<string>Zocial.ttf</string>
   		<string>Fontisto.ttf</string>
 	</array>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>We need access to photo library to save marker images</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>We need access to photo library to save marker images</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string></string>
 	<key>UILaunchStoryboardName</key>

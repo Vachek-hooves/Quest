@@ -2,9 +2,10 @@ import { StyleSheet, Text, View, Image, Modal, TouchableOpacity, ScrollView, Ima
 import MapView, { Marker, Callout } from 'react-native-maps';
 import LinearGradient from 'react-native-linear-gradient';
 import { attractions } from '../../data/attractions';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { launchImageLibrary } from 'react-native-image-picker';
 import { useAppContext } from '../../store/appContext';
+import RNFS from 'react-native-fs';
 
 const MapScreen = () => {
   const { userMarkers, addUserMarker } = useAppContext();
@@ -18,6 +19,46 @@ const MapScreen = () => {
     image: null,
     coordinates: null
   });
+
+  const [imageExistsMap, setImageExistsMap] = useState({});
+
+  useEffect(() => {
+    const checkImages = async () => {
+      const existsMap = {};
+      for (const marker of userMarkers) {
+        if (typeof marker.image === 'string') {
+          existsMap[marker.image] = await checkImageExists(marker.image);
+        }
+      }
+      setImageExistsMap(existsMap);
+    };
+    checkImages();
+  }, [userMarkers]);
+
+  const checkImageExists = async (path) => {
+    try {
+      return await RNFS.exists(path);
+    } catch (error) {
+      console.error('Error checking image:', error);
+      return false;
+    }
+  };
+
+  const renderMarkerImage = (imagePath) => {
+    if (typeof imagePath === 'string') {
+      if (!imageExistsMap[imagePath]) {
+        return <Image 
+          source={require('../../assets/image/default-marker.png')} 
+          style={styles.markerImage} 
+        />;
+      }
+    }
+    
+    return <Image 
+      source={typeof imagePath === 'string' ? { uri: imagePath } : imagePath} 
+      style={styles.markerImage} 
+    />;
+  };
 
   const handleMapPress = (event) => {
     console.log(event.nativeEvent);
@@ -121,7 +162,7 @@ const MapScreen = () => {
             onPress={(e) => {
               e.stopPropagation();
             }}>
-            <Image source={{ uri: marker.image }} style={styles.markerImage} />
+            {renderMarkerImage(marker.image)}
             <Callout
               onPress={(e) => {
                 e.stopPropagation();
