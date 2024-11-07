@@ -57,18 +57,18 @@ const TabNavigator = () => {
           padding: 5,
         },
       })}>
+        <Tab.Screen 
+          name="UserScreen" 
+          component={UserScreen}
+          options={{
+            tabBarLabel: 'Profile'
+          }}
+        />
       <Tab.Screen 
         name="MapScreen" 
         component={MapScreen}
         options={{
           tabBarLabel: 'Map'
-        }}
-      />
-      <Tab.Screen 
-        name="UserScreen" 
-        component={UserScreen}
-        options={{
-          tabBarLabel: 'Profile'
         }}
       />
       <Tab.Screen 
