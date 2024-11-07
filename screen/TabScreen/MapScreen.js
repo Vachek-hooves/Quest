@@ -114,8 +114,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   markerImage: {
-    width: 60,
-    height: 60,
+    width: 70,
+    height: 70,
     borderRadius: 30,
     borderWidth: 2,
     borderColor: '#D4AF37',

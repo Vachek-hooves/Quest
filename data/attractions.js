@@ -27,7 +27,7 @@ export const attractions = [
         id: '4',
         location: 'Kamiros',
         description: 'The Ancient City of Kamiros is one of the three major ancient cities of Rhodes, alongside Lindos and Ialyssos. It was founded in the 5th century BC and is located on the northwest coast of the island. The ruins of Kamiros include a well-planned city layout with a grid of streets, residential houses, and public buildings.',
-        coordinates: {latitude:'35.96231232279904', longitude:'27.145209878809915'},
+        coordinates: {latitude:'36.33349574755153', longitude:'27.923967045642858'},
         interest: 'Kamiros provides a unique opportunity to walk through the remains of an ancient city, with informative signs detailing the history and significance of each area.',
         image:require('../assets/image/attraction/kamiros.png')
     },
