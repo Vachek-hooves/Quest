@@ -11,7 +11,7 @@ const TabNavigator=()=>{
   return (
     <Tab.Navigator screenOptions={{headerShown:false,animation:'fade',animationDuration:1000}}>
       <Tab.Screen name="MapScreen" component={MapScreen} />
-      {/* <Tab.Screen name="UserScreen" component={UserScreen} /> */}
+      <Tab.Screen name="UserScreen" component={UserScreen} />
       <Tab.Screen name="QuizChooseScreen" component={QuizChooseScreen} />
     </Tab.Navigator>
   )
