@@ -1,16 +1,71 @@
-import { StyleSheet, Text, View, Image, Modal, TouchableOpacity, ScrollView, ImageBackground } from 'react-native';
+import { StyleSheet, Text, View, Image, Modal, TouchableOpacity, ScrollView, ImageBackground, TextInput } from 'react-native';
 import MapView, { Marker, Callout } from 'react-native-maps';
 import LinearGradient from 'react-native-linear-gradient';
 import { attractions } from '../../data/attractions';
 import { useState } from 'react';
+import { launchImageLibrary } from 'react-native-image-picker';
+import { useAppContext } from '../../store/appContext';
 
 const MapScreen = () => {
+  const { userMarkers, addUserMarker } = useAppContext();
   const [selectedAttraction, setSelectedAttraction] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [newMarker, setNewMarker] = useState({
+    location: '',
+    description: '',
+    interest: '',
+    image: null,
+    coordinates: null
+  });
+
+  const handleMapPress = (event) => {
+    console.log(event.nativeEvent);
+    if (event.nativeEvent.action !== 'marker-press') {
+      const { coordinate } = event.nativeEvent;
+      setNewMarker(prev => ({
+        ...prev,
+        coordinates: coordinate
+      }));
+      setShowCreateModal(true);
+    }
+  };
+
+  const pickImage = async () => {
+    const result = await launchImageLibrary({
+      mediaType: 'photo',
+      quality: 1,
+    });
+
+    if (!result.didCancel && result.assets?.[0]) {
+      setNewMarker(prev => ({
+        ...prev,
+        image: result.assets[0].uri
+      }));
+    }
+  };
+
+  const handleCreateMarker = async () => {
+    if (newMarker.location && newMarker.description && newMarker.image && newMarker.coordinates) {
+      await addUserMarker({
+        ...newMarker,
+        id: Date.now().toString(),
+      });
+      setShowCreateModal(false);
+      setNewMarker({
+        location: '',
+        description: '',
+        interest: '',
+        image: null,
+        coordinates: null
+      });
+    }
+  };
 
   return (
     <View style={styles.container}>
       <MapView
+        onPress={handleMapPress}
         initialRegion={{
           latitude: 36.4335,
           longitude: 28.2042,
@@ -18,23 +73,68 @@ const MapScreen = () => {
           longitudeDelta: 0.1021,
         }}
         style={styles.map}>
+        {newMarker.coordinates && showCreateModal && (
+          <Marker
+            coordinate={newMarker.coordinates}
+            pinColor="#D4AF37"
+          />
+        )}
+
         {attractions.map(attraction => (
           <Marker
             key={attraction.id}
             coordinate={attraction.coordinates}
             title={attraction.location}
-            description={attraction.description}>
-            <Image source={attraction.image} style={styles.markerImage} />
-            <Callout onPress={() => {
-              setSelectedAttraction(attraction);
-              setShowModal(true);
+            description={attraction.description}
+            onPress={(e) => {
+              e.stopPropagation();
             }}>
+            <Image source={attraction.image} style={styles.markerImage} />
+            <Callout
+              onPress={(e) => {
+                e.stopPropagation();
+                setSelectedAttraction(attraction);
+                setShowModal(true);
+              }}>
               <View style={styles.calloutContainer}>
                 <Text style={styles.calloutTitle}>{attraction.location}</Text>
                 <TouchableOpacity 
                   style={styles.calloutButton}
-                  onPress={() => {
+                  onPress={(e) => {
+                    e.stopPropagation();
                     setSelectedAttraction(attraction);
+                    setShowModal(true);
+                  }}>
+                  <Text style={styles.calloutButtonText}>View Details</Text>
+                </TouchableOpacity>
+              </View>
+            </Callout>
+          </Marker>
+        ))}
+
+        {userMarkers.map(marker => (
+          <Marker
+            key={marker.id}
+            coordinate={marker.coordinates}
+            title={marker.location}
+            description={marker.description}
+            onPress={(e) => {
+              e.stopPropagation();
+            }}>
+            <Image source={{ uri: marker.image }} style={styles.markerImage} />
+            <Callout
+              onPress={(e) => {
+                e.stopPropagation();
+                setSelectedAttraction(marker);
+                setShowModal(true);
+              }}>
+              <View style={styles.calloutContainer}>
+                <Text style={styles.calloutTitle}>{marker.location}</Text>
+                <TouchableOpacity 
+                  style={styles.calloutButton}
+                  onPress={(e) => {
+                    e.stopPropagation();
+                    setSelectedAttraction(marker);
                     setShowModal(true);
                   }}>
                   <Text style={styles.calloutButtonText}>View Details</Text>
@@ -45,26 +145,40 @@ const MapScreen = () => {
         ))}
       </MapView>
 
+      {!showCreateModal && (
+        <View style={styles.instructionOverlay}>
+          <Text style={styles.instructionText}>
+            Tap anywhere on the map to create a new marker
+          </Text>
+        </View>
+      )}
+
       {/* Details Modal */}
       <Modal
         animationType="slide"
         transparent={true}
         visible={showModal}
-        onRequestClose={() => setShowModal(false)}>
+        onRequestClose={() => {
+          setShowModal(false);
+          setSelectedAttraction(null);
+        }}>
         {selectedAttraction && (
           <View style={styles.modalContainer}>
             <ImageBackground 
-              source={selectedAttraction.image}
+              source={typeof selectedAttraction.image === 'string' 
+                ? { uri: selectedAttraction.image } 
+                : selectedAttraction.image}
               style={styles.modalBackground}
-              blurRadius={2}
-            >
+              blurRadius={2}>
               <LinearGradient
-                colors={['rgba(0,0,0,0.7)', 'rgba(0,0,0,0.9)']}
+                colors={['rgba(0,0,0,0.4)', 'rgba(0,0,0,0.9)']}
                 style={styles.gradientOverlay}>
                 <ScrollView>
                   <View style={styles.modalContent}>
                     <Image 
-                      source={selectedAttraction.image} 
+                      source={typeof selectedAttraction.image === 'string' 
+                        ? { uri: selectedAttraction.image } 
+                        : selectedAttraction.image}
                       style={styles.modalImage}
                     />
                     <Text style={styles.modalTitle}>
@@ -88,7 +202,10 @@ const MapScreen = () => {
                       style={styles.closeButton}>
                       <TouchableOpacity 
                         style={styles.closeButtonInner}
-                        onPress={() => setShowModal(false)}>
+                        onPress={() => {
+                          setShowModal(false);
+                          setSelectedAttraction(null);
+                        }}>
                         <Text style={styles.closeButtonText}>Close</Text>
                       </TouchableOpacity>
                     </LinearGradient>
@@ -99,11 +216,149 @@ const MapScreen = () => {
           </View>
         )}
       </Modal>
+
+      {/* Create Marker Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={showCreateModal}
+        onRequestClose={() => setShowCreateModal(false)}>
+        <View style={styles.modalContainer}>
+          <LinearGradient
+            colors={['rgba(0,0,0,0.7)', 'rgba(0,0,0,0.9)']}
+            style={styles.gradientOverlay}>
+            <ScrollView>
+              <View style={styles.modalContent}>
+                <Text style={styles.modalTitle}>Create New Marker</Text>
+                
+                <TouchableOpacity onPress={pickImage} style={styles.imagePickerButton}>
+                  {newMarker.image ? (
+                    <Image source={{ uri: newMarker.image }} style={styles.previewImage} />
+                  ) : (
+                    <LinearGradient
+                      colors={['#D4AF37', '#C5A028']}
+                      style={styles.uploadButton}>
+                      <Text style={styles.uploadButtonText}>Choose Image</Text>
+                    </LinearGradient>
+                  )}
+                </TouchableOpacity>
+
+                <TextInput
+                  style={styles.input}
+                  placeholder="Location Name"
+                  placeholderTextColor="#888"
+                  value={newMarker.location}
+                  onChangeText={(text) => setNewMarker(prev => ({...prev, location: text}))}
+                />
+
+                <TextInput
+                  style={[styles.input, styles.textArea]}
+                  placeholder="Description"
+                  placeholderTextColor="#888"
+                  multiline
+                  value={newMarker.description}
+                  onChangeText={(text) => setNewMarker(prev => ({...prev, description: text}))}
+                />
+
+                <TextInput
+                  style={[styles.input, styles.textArea]}
+                  placeholder="Points of Interest"
+                  placeholderTextColor="#888"
+                  multiline
+                  value={newMarker.interest}
+                  onChangeText={(text) => setNewMarker(prev => ({...prev, interest: text}))}
+                />
+
+                <LinearGradient
+                  colors={['#D4AF37', '#C5A028']}
+                  style={styles.closeButton}>
+                  <TouchableOpacity 
+                    style={styles.closeButtonInner}
+                    onPress={handleCreateMarker}>
+                    <Text style={styles.closeButtonText}>Create Marker</Text>
+                  </TouchableOpacity>
+                </LinearGradient>
+
+                <TouchableOpacity 
+                  style={styles.cancelButton}
+                  onPress={() => setShowCreateModal(false)}>
+                  <Text style={styles.cancelButtonText}>Cancel</Text>
+                </TouchableOpacity>
+              </View>
+            </ScrollView>
+          </LinearGradient>
+        </View>
+      </Modal>
     </View>
   );
 };
 
-export default MapScreen;
+const additionalStyles = {
+  input: {
+    backgroundColor: '#2A2A2A',
+    borderRadius: 10,
+    padding: 15,
+    marginBottom: 15,
+    color: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#D4AF37',
+  },
+  textArea: {
+    height: 100,
+    textAlignVertical: 'top',
+  },
+  imagePickerButton: {
+    width: '100%',
+    height: 200,
+    marginBottom: 20,
+    borderRadius: 15,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: '#D4AF37',
+    backgroundColor: '#2A2A2A',
+  },
+  previewImage: {
+    width: '100%',
+    height: '100%',
+  },
+  uploadButton: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  uploadButtonText: {
+    color: '#1A1A1A',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  cancelButton: {
+    marginTop: 10,
+    padding: 15,
+    alignItems: 'center',
+  },
+  cancelButtonText: {
+    color: '#D4AF37',
+    fontSize: 16,
+  },
+  instructionOverlay: {
+    position: 'absolute',
+    top: 20,
+    left: 20,
+    right: 20,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    padding: 15,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#D4AF37',
+    marginTop: 50,
+    
+  },
+  instructionText: {
+    color: '#FFFFFF',
+    textAlign: 'center',
+    fontSize: 16,
+  },
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -111,6 +366,7 @@ const styles = StyleSheet.create({
     // backgroundColor: '#fff',
   },
   map: {
+    
     flex: 1,
   },
   markerImage: {
@@ -211,4 +467,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
+  ...additionalStyles,
 });
+
+export default MapScreen;
