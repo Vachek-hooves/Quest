@@ -114,7 +114,9 @@ const UserScreen = () => {
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={['rgba(0,0,0,0.8)', 'rgba(0,0,0,0.95)']}
+        colors={['#1A1A1A', '#2A2A2A', '#AA8A1B']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
         style={styles.gradient}>
         <ScrollView contentContainerStyle={styles.contentContainer}>
           {user.image ? (
@@ -160,7 +162,7 @@ const UserScreen = () => {
             <Icon name="close-circle" size={32} color="#D4AF37" />
           </TouchableOpacity>
           <LinearGradient
-            colors={['rgba(0,0,0,0.8)', 'rgba(0,0,0,0.95)']}
+            colors={['#1A1A1A', '#2A2A2A', '#AA8A1B']}
             style={styles.modalGradient}>
             <ScrollView>
               <View style={styles.modalContent}>

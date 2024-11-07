@@ -41,7 +41,7 @@ const QuizChooseScreen = () => {
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={['#1A1A1A', '#2A2A2A', '#1A1A1A']}
+        colors={['#1A1A1A', '#2A2A2A', '#AA8A1B']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.gradient}>
