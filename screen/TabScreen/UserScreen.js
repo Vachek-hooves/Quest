@@ -8,7 +8,7 @@ import {
   Modal,
   ScrollView,
 } from 'react-native';
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect,us} from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {launchImageLibrary} from 'react-native-image-picker';
 import LinearGradient from 'react-native-linear-gradient';
@@ -17,6 +17,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import RNFS from 'react-native-fs';
 
 const UserScreen = () => {
+
   const [user, setUser] = useState({
     name: '',
     image: null,
@@ -175,8 +176,15 @@ const UserScreen = () => {
                     />
                   ) : (
                     <View style={styles.uploadButton}>
-                      <Icon name="camera" size={40} color="#D4AF37" />
-                      <Text style={styles.uploadButtonText}>Choose Photo</Text>
+                      {/* <Icon name="camera" size={40} color="#D4AF37" /> */}
+                      <LottieView
+                        source={require('../../assets/animation/camera.json')}
+                        autoPlay
+                        loop
+                        style={styles.lottieCamera}
+                        speed={0.5}
+                      />
+                      {/* <Text style={styles.uploadButtonText}>Choose Photo</Text> */}
                     </View>
                   )}
                 </TouchableOpacity>
@@ -200,12 +208,9 @@ const UserScreen = () => {
                     <Text style={styles.saveButtonText}>Save Changes</Text>
                   </TouchableOpacity>
                 </LinearGradient>
-                <LottieView
-                  source={require('../../assets/animation/form.json')}
-                  autoPlay
-                  loop
-                  style={{height: 200, width: 100}}
-                />
+                <View style={styles.lottieContainer}>
+                  
+                </View>
               </View>
             </ScrollView>
           </LinearGradient>
@@ -229,6 +234,10 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingTop: 60,
   },
+  lottieCamera: {
+    width: 140,
+    height: 140,
+  },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -236,9 +245,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#1A1A1A',
   },
   lottieAnimation: {
-    width: 400,
-    height: 400,
+    width: 350, // Reduce from 400 to prevent scaling artifacts
+    height: 350,
     marginVertical: 20,
+    alignSelf: 'center',
+    transform: [{scale: 1}], // Add this to prevent unwanted scaling
   },
   profileImage: {
     width: 150,
@@ -306,8 +317,8 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   imagePickerButton: {
-    width: 150,
-    height: 150,
+    width: 160,
+    height: 160,
     borderRadius: 75,
     marginBottom: 30,
     overflow: 'hidden',
