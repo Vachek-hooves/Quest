@@ -6,6 +6,8 @@ import { useState, useEffect } from 'react';
 import { launchImageLibrary } from 'react-native-image-picker';
 import { useAppContext } from '../../store/appContext';
 import RNFS from 'react-native-fs';
+import LottieView from 'lottie-react-native';
+import { Animated } from 'react-native';
 
 const MapScreen = () => {
   const { userMarkers, addUserMarker } = useAppContext();
@@ -22,6 +24,9 @@ const MapScreen = () => {
 
   const [imageExistsMap, setImageExistsMap] = useState({});
 
+  const [showCreatePopup, setShowCreatePopup] = useState(false);
+  const popupAnimation = new Animated.Value(0);
+
   useEffect(() => {
     const checkImages = async () => {
       const existsMap = {};
@@ -34,6 +39,23 @@ const MapScreen = () => {
     };
     checkImages();
   }, [userMarkers]);
+
+  useEffect(() => {
+    if (showCreatePopup) {
+      Animated.spring(popupAnimation, {
+        toValue: 1,
+        useNativeDriver: true,
+        tension: 50,
+        friction: 7
+      }).start();
+    } else {
+      Animated.timing(popupAnimation, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true
+      }).start();
+    }
+  }, [showCreatePopup]);
 
   const checkImageExists = async (path) => {
     try {
@@ -68,7 +90,7 @@ const MapScreen = () => {
         ...prev,
         coordinates: coordinate
       }));
-      setShowCreateModal(true);
+      setShowCreatePopup(true);
     }
   };
 
@@ -101,6 +123,11 @@ const MapScreen = () => {
         coordinates: null
       });
     }
+  };
+
+  const handleCreatePress = () => {
+    setShowCreatePopup(false);
+    setShowCreateModal(true);
   };
 
   return (
@@ -185,6 +212,41 @@ const MapScreen = () => {
           </Marker>
         ))}
       </MapView>
+
+      {showCreatePopup && (
+        <Animated.View 
+          style={[
+            styles.createPopup,
+            {
+              transform: [
+                {
+                  scale: popupAnimation.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0.3, 1]
+                  })
+                }
+              ],
+              opacity: popupAnimation
+            }
+          ]}
+        >
+          <LottieView
+            source={require('../../assets/animation/mapMarker.json')}
+            autoPlay
+            loop
+            style={styles.lottieAnimation}
+          />
+          <LinearGradient
+            colors={['#D4AF37', '#C5A028']}
+            style={styles.popupCreateButton}>
+            <TouchableOpacity 
+              style={styles.popupCreateButtonInner}
+              onPress={handleCreatePress}>
+              <Text style={styles.popupCreateButtonText}>Create</Text>
+            </TouchableOpacity>
+          </LinearGradient>
+        </Animated.View>
+      )}
 
       {!showCreateModal && (
         <View style={styles.instructionOverlay}>
@@ -398,6 +460,45 @@ const additionalStyles = {
     color: '#FFFFFF',
     textAlign: 'center',
     fontSize: 16,
+  },
+  createPopup: {
+    position: 'absolute',
+    bottom: 40,
+    alignSelf: 'center',
+    backgroundColor: 'rgba(26, 26, 26, 0.95)',
+    borderRadius: 15,
+    padding: 20,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#D4AF37',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    width: 200, // Set fixed width for smaller popup
+  },
+  lottieAnimation: {
+    width: 100,
+    height: 100,
+    marginBottom: 10,
+  },
+  popupCreateButton: {
+    width: '100%',
+    borderRadius: 10,
+    overflow: 'hidden',
+  },
+  popupCreateButtonInner: {
+    padding: 12,
+    alignItems: 'center',
+  },
+  popupCreateButtonText: {
+    color: '#1A1A1A',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 };
 
