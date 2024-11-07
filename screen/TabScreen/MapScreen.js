@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, Image, Modal, TouchableOpacity, ScrollView, ImageBackground, TextInput } from 'react-native';
+import { StyleSheet, Text, View, Image, Modal, TouchableOpacity, ScrollView, ImageBackground, TextInput,SafeAreaView } from 'react-native';
 import MapView, { Marker, Callout } from 'react-native-maps';
 import LinearGradient from 'react-native-linear-gradient';
 import { attractions } from '../../data/attractions';
@@ -8,6 +8,7 @@ import { useAppContext } from '../../store/appContext';
 import RNFS from 'react-native-fs';
 import LottieView from 'lottie-react-native';
 import { Animated } from 'react-native';
+import Icon from 'react-native-vector-icons/Ionicons';
 
 const MapScreen = () => {
   const { userMarkers, addUserMarker } = useAppContext();
@@ -66,18 +67,19 @@ const MapScreen = () => {
     }
   };
 
-  const renderMarkerImage = (imagePath) => {
-    if (typeof imagePath === 'string') {
-      if (!imageExistsMap[imagePath]) {
-        return <Image 
-          source={require('../../assets/image/default-marker.png')} 
-          style={styles.markerImage} 
-        />;
+  const getImageSource = (image) => {
+    if (typeof image === 'string') {
+      if (imageExistsMap[image]) {
+        return { uri: `file://${image}` };
       }
+      return require('../../assets/image/default-marker.png');
     }
-    
+    return image; // For pre-defined attractions
+  };
+
+  const renderMarkerImage = (imagePath) => {
     return <Image 
-      source={typeof imagePath === 'string' ? { uri: imagePath } : imagePath} 
+      source={getImageSource(imagePath)} 
       style={styles.markerImage} 
     />;
   };
@@ -132,6 +134,7 @@ const MapScreen = () => {
 
   return (
     <View style={styles.container}>
+      
       <MapView
         onPress={handleMapPress}
         initialRegion={{
@@ -214,22 +217,20 @@ const MapScreen = () => {
       </MapView>
 
       {showCreatePopup && (
-        <Animated.View 
-          style={[
-            styles.createPopup,
-            {
-              transform: [
-                {
-                  scale: popupAnimation.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [0.3, 1]
-                  })
-                }
-              ],
-              opacity: popupAnimation
-            }
-          ]}
-        >
+        <Animated.View style={[styles.createPopup, {
+          transform: [{
+            scale: popupAnimation.interpolate({
+              inputRange: [0, 1],
+              outputRange: [0.3, 1]
+            })
+          }],
+          opacity: popupAnimation
+        }]}>
+          <TouchableOpacity 
+            style={styles.closeIcon} 
+            onPress={() => setShowCreatePopup(false)}>
+            <Icon name="close-circle" size={28} color="#D4AF37" />
+          </TouchableOpacity>
           <LottieView
             source={require('../../assets/animation/mapMarker.json')}
             autoPlay
@@ -256,7 +257,7 @@ const MapScreen = () => {
         </View>
       )}
 
-      {/* Details Modal */}
+      {/* Updated Details Modal */}
       <Modal
         animationType="slide"
         transparent={true}
@@ -268,20 +269,16 @@ const MapScreen = () => {
         {selectedAttraction && (
           <View style={styles.modalContainer}>
             <ImageBackground 
-              source={typeof selectedAttraction.image === 'string' 
-                ? { uri: selectedAttraction.image } 
-                : selectedAttraction.image}
+              source={getImageSource(selectedAttraction.image)}
               style={styles.modalBackground}
               blurRadius={2}>
               <LinearGradient
-                colors={['rgba(0,0,0,0.4)', 'rgba(0,0,0,0.9)']}
+                colors={['rgba(0,0,0,0.7)', 'rgba(0,0,0,0.9)']}
                 style={styles.gradientOverlay}>
                 <ScrollView>
                   <View style={styles.modalContent}>
                     <Image 
-                      source={typeof selectedAttraction.image === 'string' 
-                        ? { uri: selectedAttraction.image } 
-                        : selectedAttraction.image}
+                      source={getImageSource(selectedAttraction.image)}
                       style={styles.modalImage}
                     />
                     <Text style={styles.modalTitle}>
@@ -300,16 +297,18 @@ const MapScreen = () => {
                     <Text style={styles.modalText}>
                       {selectedAttraction.interest}
                     </Text>
+                    
+                    {/* Back Button at bottom */}
                     <LinearGradient
                       colors={['#D4AF37', '#C5A028']}
-                      style={styles.closeButton}>
+                      style={styles.backButton}>
                       <TouchableOpacity 
-                        style={styles.closeButtonInner}
+                        style={styles.backButtonInner}
                         onPress={() => {
                           setShowModal(false);
                           setSelectedAttraction(null);
                         }}>
-                        <Text style={styles.closeButtonText}>Close</Text>
+                        <Text style={styles.backButtonText}>Back to Map</Text>
                       </TouchableOpacity>
                     </LinearGradient>
                   </View>
@@ -327,8 +326,13 @@ const MapScreen = () => {
         visible={showCreateModal}
         onRequestClose={() => setShowCreateModal(false)}>
         <View style={styles.modalContainer}>
+          <TouchableOpacity 
+            style={styles.modalCloseIcon} 
+            onPress={() => setShowCreateModal(false)}>
+            <Icon name="close-circle" size={32} color="#D4AF37" />
+          </TouchableOpacity>
           <LinearGradient
-            colors={['rgba(0,0,0,0.7)', 'rgba(0,0,0,0.9)']}
+            colors={['rgba(0,0,0,0.8)', 'rgba(0,0,0,0.95)']}
             style={styles.gradientOverlay}>
             <ScrollView>
               <View style={styles.modalContent}>
@@ -480,6 +484,7 @@ const additionalStyles = {
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     width: 200, // Set fixed width for smaller popup
+    paddingTop: 10,
   },
   lottieAnimation: {
     width: 100,
@@ -500,49 +505,29 @@ const additionalStyles = {
     fontSize: 16,
     fontWeight: 'bold',
   },
-};
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    // backgroundColor: '#fff',
-  },
-  map: {
-    
-    flex: 1,
-  },
-  markerImage: {
-    width: 70,
-    height: 70,
-    borderRadius: 30,
-    borderWidth: 2,
-    borderColor: '#D4AF37',
-  },
-  calloutContainer: {
-    width: 200,
-    padding: 10,
-    alignItems: 'center',
+  closeIcon: {
+    position: 'absolute',
+    top: -10,
+    right: -10,
+    zIndex: 1,
     backgroundColor: '#1A1A1A',
-    borderRadius: 10,
+    borderRadius: 15,
   },
-  calloutTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 5,
-    color: '#D4AF37',
-  },
-  calloutButton: {
-    backgroundColor: '#D4AF37',
-    padding: 8,
-    borderRadius: 5,
-    marginTop: 5,
-    width: '100%',
-    alignItems: 'center',
-  },
-  calloutButtonText: {
-    color: '#1A1A1A',
-    fontSize: 14,
-    fontWeight: 'bold',
+  modalCloseIcon: {
+    position: 'absolute',
+    top: 40,
+    right: 20,
+    zIndex: 2,
+    backgroundColor: 'rgba(26, 26, 26, 0.7)',
+    borderRadius: 16,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
   },
   modalContainer: {
     flex: 1,
@@ -556,6 +541,7 @@ const styles = StyleSheet.create({
   modalContent: {
     padding: 20,
     paddingTop: 40,
+    paddingBottom: 30, // Add more padding at bottom for the back button
   },
   modalImage: {
     width: '100%',
@@ -607,6 +593,65 @@ const styles = StyleSheet.create({
   closeButtonText: {
     color: '#1A1A1A',
     fontSize: 16,
+    fontWeight: 'bold',
+  },
+  backButton: {
+    borderRadius: 10,
+    marginTop: 30,
+    overflow: 'hidden',
+    marginBottom: 20, // Add space below the button
+  },
+  backButtonInner: {
+    padding: 15,
+    alignItems: 'center',
+  },
+  backButtonText: {
+    color: '#1A1A1A',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    // backgroundColor: '#fff',
+  },
+  map: {
+    
+    flex: 1,
+  },
+  markerImage: {
+    width: 70,
+    height: 70,
+    borderRadius: 30,
+    borderWidth: 2,
+    borderColor: '#D4AF37',
+  },
+  calloutContainer: {
+    width: 200,
+    padding: 10,
+    alignItems: 'center',
+    backgroundColor: '#1A1A1A',
+    borderRadius: 10,
+  },
+  calloutTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 5,
+    color: '#D4AF37',
+  },
+  calloutButton: {
+    backgroundColor: '#D4AF37',
+    padding: 8,
+    borderRadius: 5,
+    marginTop: 5,
+    width: '100%',
+    alignItems: 'center',
+  },
+  calloutButtonText: {
+    color: '#1A1A1A',
+    fontSize: 14,
     fontWeight: 'bold',
   },
   ...additionalStyles,
