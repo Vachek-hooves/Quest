@@ -86,7 +86,7 @@ function App() {
   return (
     <AppProvider>
       <NavigationContainer>
-        <Stack.Navigator screenOptions={{headerShown: false, animation: 'fade', animationDuration: 1000}}>
+        <Stack.Navigator screenOptions={{headerShown: false, animation: 'slide_from_right', animationDuration: 1000}}>
           <Stack.Screen name='TabNavigator' component={TabNavigator} />
           <Stack.Screen name='TimeQuizScreen' component={TimeQuizScreen} />
           <Stack.Screen name='SuddenQuizScreen' component={SuddenQuizScreen} />

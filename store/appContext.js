@@ -1,17 +1,32 @@
 import {createContext, useState, useContext, useEffect} from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import RNFS from 'react-native-fs';
+import { quizData } from '../data/quizData';
 
 export const AppContext = createContext();
 
 export const AppProvider = ({children}) => {
     const [userMarkers, setUserMarkers] = useState([]);
+    const [timedQuizState, setTimedQuizState] = useState({
+        highScore: 0,        
+        gamesPlayed: 0,
+        bestTime: null,      
+        lastPlayedDate: null,
+    });
 
-    // Load user markers from storage on app start
+    const [suddenDeathQuizState, setSuddenDeathQuizState] = useState({
+        highScore: 0,        
+        gamesPlayed: 0,
+        bestStreak: 0,       
+        lastPlayedDate: null,
+    });
+
     useEffect(() => {
         loadUserMarkers();
+        loadQuizStates();
     }, []);
 
+    // User Markers functions
     const loadUserMarkers = async () => {
         try {
             const stored = await AsyncStorage.getItem('userMarkers');
@@ -25,14 +40,9 @@ export const AppProvider = ({children}) => {
 
     const saveImageToStorage = async (imageUri) => {
         try {
-            // Create a unique filename
             const fileName = `marker_image_${Date.now()}.jpg`;
-            // Define the destination path in app's documents directory
             const destPath = `${RNFS.DocumentDirectoryPath}/${fileName}`;
-
-            // Copy the image from temp location to permanent storage
             await RNFS.copyFile(imageUri, destPath);
-
             return destPath;
         } catch (error) {
             console.error('Error saving image:', error);
@@ -42,13 +52,11 @@ export const AppProvider = ({children}) => {
 
     const addUserMarker = async (newMarker) => {
         try {
-            // Save image to permanent storage
             const savedImagePath = await saveImageToStorage(newMarker.image);
             if (!savedImagePath) {
                 throw new Error('Failed to save image');
             }
 
-            // Create marker with permanent image path
             const markerToSave = {
                 ...newMarker,
                 image: savedImagePath
@@ -62,9 +70,104 @@ export const AppProvider = ({children}) => {
         }
     };
 
+    // Quiz States functions
+    const loadQuizStates = async () => {
+        try {
+            // Load Timed Challenge state
+            const storedTimed = await AsyncStorage.getItem('timedQuizState');
+            if (storedTimed) {
+                setTimedQuizState(JSON.parse(storedTimed));
+            } else {
+                const initialTimedState = {
+                    highScore: 0,
+                    gamesPlayed: 0,
+                    bestTime: null,
+                    lastPlayedDate: null,
+                };
+                await AsyncStorage.setItem('timedQuizState', JSON.stringify(initialTimedState));
+                setTimedQuizState(initialTimedState);
+            }
+
+            // Load Sudden Death state
+            const storedSudden = await AsyncStorage.getItem('suddenDeathQuizState');
+            if (storedSudden) {
+                setSuddenDeathQuizState(JSON.parse(storedSudden));
+            } else {
+                const initialSuddenState = {
+                    highScore: 0,
+                    gamesPlayed: 0,
+                    bestStreak: 0,
+                    lastPlayedDate: null,
+                };
+                await AsyncStorage.setItem('suddenDeathQuizState', JSON.stringify(initialSuddenState));
+                setSuddenDeathQuizState(initialSuddenState);
+            }
+        } catch (error) {
+            console.error('Error loading quiz states:', error);
+        }
+    };
+
+    const updateTimedQuizScore = async (results) => {
+        try {
+            const { correctAnswers, timePerQuestion } = results;
+            const newState = { ...timedQuizState };
+            
+            newState.gamesPlayed += 1;
+            
+            if (correctAnswers > newState.highScore) {
+                newState.highScore = correctAnswers;
+            }
+            
+            if (!newState.bestTime || timePerQuestion < newState.bestTime) {
+                newState.bestTime = timePerQuestion;
+            }
+            
+            newState.lastPlayedDate = new Date().toISOString();
+            
+            await AsyncStorage.setItem('timedQuizState', JSON.stringify(newState));
+            setTimedQuizState(newState);
+        } catch (error) {
+            console.error('Error updating timed quiz score:', error);
+        }
+    };
+
+    const updateSuddenDeathScore = async (results) => {
+        try {
+            const { streak } = results;
+            const newState = { ...suddenDeathQuizState };
+            
+            newState.gamesPlayed += 1;
+            
+            if (streak > newState.highScore) {
+                newState.highScore = streak;
+            }
+            
+            if (streak > newState.bestStreak) {
+                newState.bestStreak = streak;
+            }
+            
+            newState.lastPlayedDate = new Date().toISOString();
+            
+            await AsyncStorage.setItem('suddenDeathQuizState', JSON.stringify(newState));
+            setSuddenDeathQuizState(newState);
+        } catch (error) {
+            console.error('Error updating sudden death score:', error);
+        }
+    };
+
+    const getRandomQuestions = (count = 10) => {
+        const shuffled = [...quizData].sort(() => 0.5 - Math.random());
+        return shuffled.slice(0, count);
+    };
+
     const value = {
         userMarkers,
-        addUserMarker
+        addUserMarker,
+        timedQuizState,
+        suddenDeathQuizState,
+        updateTimedQuizScore,
+        updateSuddenDeathScore,
+        getRandomQuestions,
     };
 
     return (
