@@ -13,8 +13,8 @@ export const AppProvider = ({children}) => {
         bestTime: null,      
         lastPlayedDate: null,
         finalScores: [],
-        averageScore: 0,
         totalScore: 0,
+        averageScore: 0,
         monthlyHighScore: 0,
         weeklyHighScore: 0,
     });
@@ -27,8 +27,8 @@ export const AppProvider = ({children}) => {
         lives: 3,
         scoreMultiplier: 2,
         timedScoreBalance: 0,
+        totalStreak: 0,
         averageStreak: 0,
-        totalGamesPlayed: 0,
         monthlyBestStreak: 0,
         weeklyBestStreak: 0,
     });
@@ -96,8 +96,8 @@ export const AppProvider = ({children}) => {
                     bestTime: null,
                     lastPlayedDate: null,
                     finalScores: [],
-                    averageScore: 0,
                     totalScore: 0,
+                    averageScore: 0,
                     monthlyHighScore: 0,
                     weeklyHighScore: 0,
                 };
@@ -138,12 +138,16 @@ export const AppProvider = ({children}) => {
             const newTimedState = { ...timedQuizState };
             const newSuddenState = { ...suddenDeathQuizState };
             
-            newTimedState.gamesPlayed += 1;
-            newTimedState.totalScore += correctAnswers;
-            newTimedState.averageScore = newTimedState.totalScore / newTimedState.gamesPlayed;
+            newTimedState.gamesPlayed = (newTimedState.gamesPlayed || 0) + 1;
+            newTimedState.totalScore = (newTimedState.totalScore || 0) + correctAnswers;
+            
+            newTimedState.averageScore = newTimedState.gamesPlayed > 0 
+                ? newTimedState.totalScore / newTimedState.gamesPlayed 
+                : 0;
+            
             newTimedState.lastPlayedDate = new Date().toISOString();
             
-            if (correctAnswers > newTimedState.highScore) {
+            if (correctAnswers > (newTimedState.highScore || 0)) {
                 newTimedState.highScore = correctAnswers;
             }
             
@@ -218,6 +222,20 @@ export const AppProvider = ({children}) => {
             
             if (action === 'use' && newState.lives > 0) {
                 newState.lives -= 1;
+                if (newState.lives === 0) {
+                    newState.gamesPlayed = (newState.gamesPlayed || 0) + 1;
+                    newState.totalStreak = (newState.totalStreak || 0) + (correctAnswers || 0);
+                    
+                    newState.averageStreak = newState.gamesPlayed > 0 
+                        ? newState.totalStreak / newState.gamesPlayed 
+                        : 0;
+                    
+                    if (correctAnswers > (newState.bestStreak || 0)) {
+                        newState.bestStreak = correctAnswers;
+                    }
+                    
+                    newState.lastPlayedDate = new Date().toISOString();
+                }
             } else if (action === 'earn' && correctAnswers === 2) {
                 // Add a life for every 2 correct answers
                 newState.lives += 1;
@@ -251,22 +269,30 @@ export const AppProvider = ({children}) => {
     const getGameStatistics = () => {
         return {
             timed: {
-                gamesPlayed: timedQuizState.gamesPlayed,
-                highScore: timedQuizState.highScore,
-                averageScore: Math.round(timedQuizState.averageScore * 10) / 10,
+                gamesPlayed: timedQuizState.gamesPlayed || 0,
+                highScore: timedQuizState.highScore || 0,
+                averageScore: timedQuizState.gamesPlayed > 0 
+                    ? Math.round((timedQuizState.totalScore / timedQuizState.gamesPlayed) * 10) / 10 
+                    : 0,
                 bestTime: timedQuizState.bestTime ? `${timedQuizState.bestTime.toFixed(1)}s` : 'N/A',
-                lastPlayed: timedQuizState.lastPlayedDate ? new Date(timedQuizState.lastPlayedDate).toLocaleDateString() : 'Never',
-                weeklyHighScore: timedQuizState.weeklyHighScore,
-                monthlyHighScore: timedQuizState.monthlyHighScore,
+                lastPlayed: timedQuizState.lastPlayedDate 
+                    ? new Date(timedQuizState.lastPlayedDate).toLocaleDateString() 
+                    : 'Never',
+                weeklyHighScore: timedQuizState.weeklyHighScore || 0,
+                monthlyHighScore: timedQuizState.monthlyHighScore || 0,
             },
             suddenDeath: {
-                gamesPlayed: suddenDeathQuizState.gamesPlayed,
-                highScore: suddenDeathQuizState.highScore,
-                bestStreak: suddenDeathQuizState.bestStreak,
-                averageStreak: Math.round(suddenDeathQuizState.averageStreak * 10) / 10,
-                lastPlayed: suddenDeathQuizState.lastPlayedDate ? new Date(suddenDeathQuizState.lastPlayedDate).toLocaleDateString() : 'Never',
-                weeklyBestStreak: suddenDeathQuizState.weeklyBestStreak,
-                monthlyBestStreak: suddenDeathQuizState.monthlyBestStreak,
+                gamesPlayed: suddenDeathQuizState.gamesPlayed || 0,
+                highScore: suddenDeathQuizState.highScore || 0,
+                bestStreak: suddenDeathQuizState.bestStreak || 0,
+                averageStreak: suddenDeathQuizState.gamesPlayed > 0 
+                    ? Math.round((suddenDeathQuizState.totalStreak / suddenDeathQuizState.gamesPlayed) * 10) / 10 
+                    : 0,
+                lastPlayed: suddenDeathQuizState.lastPlayedDate 
+                    ? new Date(suddenDeathQuizState.lastPlayedDate).toLocaleDateString() 
+                    : 'Never',
+                weeklyBestStreak: suddenDeathQuizState.weeklyBestStreak || 0,
+                monthlyBestStreak: suddenDeathQuizState.monthlyBestStreak || 0,
             }
         };
     };
