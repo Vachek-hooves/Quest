@@ -1,5 +1,5 @@
 import QuizChooseScreen from "./QuizChooseScreen";
 import MapScreen from "./MapScreen";
 import UserScreen from "./UserScreen";
-
-export {QuizChooseScreen,MapScreen,UserScreen}; 
+import FavoritePlaces from "./FavoritePlaces";
+export {QuizChooseScreen,MapScreen,UserScreen,FavoritePlaces}; 

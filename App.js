@@ -2,7 +2,7 @@ import {AppProvider} from './store/appContext';
 import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
-import {UserScreen, MapScreen, QuizChooseScreen} from './screen/TabScreen';
+import {UserScreen, MapScreen, QuizChooseScreen, FavoritePlaces} from './screen/TabScreen';
 import {TimeQuizScreen, SuddenQuizScreen, PlayQuizScreen} from './screen/StackScreen';
 import Icon from 'react-native-vector-icons/Ionicons';
 import LinearGradient from 'react-native-linear-gradient';
@@ -42,6 +42,8 @@ const TabNavigator = () => {
             iconName = focused ? 'person' : 'person-outline';
           } else if (route.name === 'QuizChooseScreen') {
             iconName = focused ? 'game-controller' : 'game-controller-outline';
+          } else if (route.name === 'FavoritePlaces') {
+            iconName = focused ? 'heart' : 'heart-outline';
           }
 
           return <Icon name={iconName} size={40} color={color} />;
@@ -78,6 +80,7 @@ const TabNavigator = () => {
           tabBarLabel: 'Quiz'
         }}
       />
+      <Tab.Screen name="FavoritePlaces" component={FavoritePlaces} options={{tabBarLabel: 'Favorites'}} />
     </Tab.Navigator>
   );
 };
