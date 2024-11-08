@@ -14,17 +14,51 @@ import {
   PlayQuizScreen,
   FavoriteDetailsScreen,
   UserWelcomeScreen,
-  
 } from './screen/StackScreen';
 import Icon from 'react-native-vector-icons/Ionicons';
 import LinearGradient from 'react-native-linear-gradient';
 import Toast from 'react-native-toast-message';
-import { toastConfig } from './config/toastConfiguration';
+import {toastConfig} from './config/toastConfiguration';
+import {TouchableOpacity,AppState} from 'react-native';
+import {useState,useEffect} from 'react';
+import {
+  toggleBackgroundMusic,
+  setupPlayer,
+  pauseBackgroundMusic,
+  playBackgroundMusic,
+} from './config/backgroundSound';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
 const TabNavigator = () => {
+  const [isPlaySound, setIsPlaySound] = useState(false);
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', nextAppState => {
+      if (nextAppState === 'active' && isPlayMusic) {
+        playBackgroundMusic();
+      } else if (nextAppState === 'inactive' || nextAppState === 'background') {
+        pauseBackgroundMusic();
+      }
+    });
+    const initMusic = async () => {
+      await setupPlayer();
+      await playBackgroundMusic();
+      setIsPlaySound(true);
+    };
+    initMusic();
+
+    return () => {
+      subscription.remove();
+      pauseBackgroundMusic();
+    };
+  }, []);
+
+  const soundToggle = () => {
+    const updatedState = toggleBackgroundMusic();
+    setIsPlaySound(updatedState);
+  };
   return (
     <Tab.Navigator
       screenOptions={({route}) => ({
@@ -99,9 +133,33 @@ const TabNavigator = () => {
         component={FavoritePlaces}
         options={{tabBarLabel: 'Favorites'}}
       />
+      <Tab.Screen
+        name=" "
+        component={NoComponent}
+        options={{
+          tabBarIcon: () => (
+            <TouchableOpacity onPress={soundToggle}>
+              {isPlaySound ? (
+                <Icon name="volume-high" size={40} color="gold" />
+              ) : (
+                <Icon name="volume-mute" size={40} color="gold" />
+              )}
+            </TouchableOpacity>
+          ),
+          tabBarLabel: 'Sound',
+          tabBarLabelStyle: {
+            fontSize: 14,
+            fontWeight: '500',
+            color: isPlaySound ? '#D4AF37' : '#888888',
+          },
+        }}
+        listeners={{tabPress: e => e.preventDefault()}}
+      />
     </Tab.Navigator>
   );
 };
+
+const NoComponent = () => null;
 
 function App() {
   return (
@@ -113,19 +171,18 @@ function App() {
             animation: 'slide_from_right',
             animationDuration: 1000,
           }}>
-          <Stack.Screen name="UserWelcomePage" component={UserWelcomeScreen}/>
+          <Stack.Screen name="UserWelcomePage" component={UserWelcomeScreen} />
           <Stack.Screen name="TabNavigator" component={TabNavigator} />
           <Stack.Screen name="TimeQuizScreen" component={TimeQuizScreen} />
           <Stack.Screen name="SuddenQuizScreen" component={SuddenQuizScreen} />
           <Stack.Screen name="PlayQuizScreen" component={PlayQuizScreen} />
-          <Stack.Screen name='FavoriteDetailsScreen' component={FavoriteDetailsScreen}/>
+          <Stack.Screen
+            name="FavoriteDetailsScreen"
+            component={FavoriteDetailsScreen}
+          />
         </Stack.Navigator>
       </NavigationContainer>
-      <Toast 
-        config={toastConfig}
-        position='top'
-        topOffset={50}
-      />
+      <Toast config={toastConfig} position="top" topOffset={50} />
     </AppProvider>
   );
 }
