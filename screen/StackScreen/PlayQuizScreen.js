@@ -167,6 +167,18 @@ const PlayQuizScreen = ({ route, navigation }) => {
     );
   };
 
+  // Add function to reset game state
+  const resetGameState = () => {
+    setGameOver(false);
+    setScore(0);
+    setCorrectStreak(0);
+    setCurrentQuestionIndex(0);
+    setSelectedAnswer(null);
+    setIsCorrect(null);
+    const newQuestions = getRandomQuestions(50);
+    setQuestions(newQuestions);
+  };
+
   // Update the game over modal render
   const renderGameOver = () => {
     if (!gameOver) return null;
@@ -207,11 +219,7 @@ const PlayQuizScreen = ({ route, navigation }) => {
                         {
                           text: 'Continue Playing',
                           onPress: () => {
-                            setGameOver(false);
-                            setScore(0);
-                            setCorrectStreak(0);
-                            setCurrentQuestionIndex(0);
-                            setQuestions(getRandomQuestions(50));
+                            resetGameState();
                           }
                         }
                       ]
@@ -247,7 +255,10 @@ const PlayQuizScreen = ({ route, navigation }) => {
     );
   };
 
-  if (!questions.length) return null;
+  // Update the main render to ensure questions are available
+  if (!questions.length || currentQuestionIndex >= questions.length) {
+    return null;
+  }
 
   const currentQuestion = questions[currentQuestionIndex];
 
@@ -262,25 +273,14 @@ const PlayQuizScreen = ({ route, navigation }) => {
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <Icon 
-            name="arrow-back" 
-            size={28} 
-            color="#D4AF37"
-          />
+          <Icon name="arrow-back" size={28} color="#D4AF37" />
         </TouchableOpacity>
 
-        {/* Updated Header */}
+        {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerItem}>
-            <Animated.View style={{ 
-              transform: [{ scale: scoreIconScale }],
-              marginRight: 8 
-            }}>
-              <Icon 
-                name="trophy-outline" 
-                size={24} 
-                color="#D4AF37"
-              />
+            <Animated.View style={{ transform: [{ scale: scoreIconScale }] }}>
+              <Icon name="trophy-outline" size={24} color="#D4AF37" />
             </Animated.View>
             <Text style={styles.score}>{score}</Text>
           </View>
@@ -300,19 +300,18 @@ const PlayQuizScreen = ({ route, navigation }) => {
           )}
         </View>
 
-        {/* Question */}
-        <Animated.View style={[styles.questionContainer, { opacity: fadeAnim }]}>
+        {/* Question and Options */}
+        <View style={styles.questionContainer}>
           <Text style={styles.question}>{currentQuestion.question}</Text>
-        </Animated.View>
+        </View>
 
-        {/* Options with feedback */}
         <View style={styles.optionsContainer}>
           {currentQuestion.options.map((option, index) => (
             <TouchableOpacity
               key={index}
               style={styles.optionButton}
               onPress={() => handleAnswer(option)}
-              disabled={gameOver || selectedAnswer !== null}
+              disabled={selectedAnswer !== null}
             >
               <LinearGradient
                 colors={getOptionStyle(option)}
@@ -324,8 +323,7 @@ const PlayQuizScreen = ({ route, navigation }) => {
           ))}
         </View>
 
-        {/* Updated Game Over Modal */}
-        {gameOver && renderGameOver()}
+        {renderGameOver()}
       </LinearGradient>
     </View>
   );
