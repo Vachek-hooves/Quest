@@ -98,6 +98,18 @@ const PlayQuizScreen = ({ route, navigation }) => {
         colors={['#1A1A1A', '#2A2A2A']}
         style={styles.gradient}
       >
+        {/* Back Button */}
+        <TouchableOpacity 
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Icon 
+            name="arrow-back" 
+            size={28} 
+            color="#D4AF37"
+          />
+        </TouchableOpacity>
+
         {/* Updated Header */}
         <View style={styles.header}>
           <View style={styles.headerItem}>
@@ -114,7 +126,7 @@ const PlayQuizScreen = ({ route, navigation }) => {
             <View style={styles.headerItem}>
               <Icon 
                 name="timer-outline" 
-                size={32} 
+                size={24} 
                 color="#D4AF37" 
                 style={styles.headerIcon}
               />
@@ -125,7 +137,7 @@ const PlayQuizScreen = ({ route, navigation }) => {
             <View style={styles.headerItem}>
               <Icon 
                 name="heart" 
-                size={32} 
+                size={24} 
                 color="#D4AF37" 
                 style={styles.headerIcon}
               />
@@ -183,14 +195,31 @@ const styles = StyleSheet.create({
   },
   gradient: {
     flex: 1,
-    paddingTop: 80,
-   paddingHorizontal:30
+    paddingTop: 50,
+    paddingHorizontal: 30
+  },
+  backButton: {
+    position: 'absolute',
+    // top: 50,
+    // left: 20,
+    width: 60,
+    height: 60,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(26, 26, 26, 0.5)',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(212, 175, 55, 0.3)',
+    zIndex: 1,
+    bottom: 60,
+    right:80
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 20,
     paddingHorizontal: 10,
+    marginTop: 40,
   },
   headerItem: {
     flexDirection: 'row',
