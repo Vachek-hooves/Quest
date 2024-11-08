@@ -20,8 +20,24 @@ const PlayQuizScreen = ({ route, navigation }) => {
   const [startTime, setStartTime] = useState(null);
 
   const fadeAnim = useRef(new Animated.Value(1)).current;
+  const scoreIconScale = useRef(new Animated.Value(1)).current;
 
-  
+  const animateScoreIcon = () => {
+    Animated.sequence([
+      Animated.spring(scoreIconScale, {
+        toValue: 1.7,
+        duration: 200,
+        useNativeDriver: true,
+        friction: 3
+      }),
+      Animated.spring(scoreIconScale, {
+        toValue: 1,
+        duration: 200,
+        useNativeDriver: true,
+        friction: 3
+      })
+    ]).start();
+  };
 
   useEffect(() => {
     setQuestions(getRandomQuestions(mode === 'timed' ? 20 : 50)); // More questions for sudden death
@@ -52,6 +68,7 @@ const PlayQuizScreen = ({ route, navigation }) => {
 
     if (isCorrect) {
       setScore(prev => prev + 1);
+      animateScoreIcon();
       Animated.sequence([
         Animated.timing(fadeAnim, {
           toValue: 0,
@@ -71,7 +88,6 @@ const PlayQuizScreen = ({ route, navigation }) => {
         setQuestions(prev => [...prev, ...getRandomQuestions(10)]);
       }
     } else if (mode === 'timed') {
-      // For timed mode, wrong answers don't end the game
       if (currentQuestionIndex < questions.length - 1) {
         setCurrentQuestionIndex(prev => prev + 1);
       }
@@ -113,12 +129,16 @@ const PlayQuizScreen = ({ route, navigation }) => {
         {/* Updated Header */}
         <View style={styles.header}>
           <View style={styles.headerItem}>
-            <Icon 
-              name="trophy-outline" 
-              size={24} 
-              color="#D4AF37" 
-              style={styles.headerIcon}
-            />
+            <Animated.View style={{ 
+              transform: [{ scale: scoreIconScale }],
+              marginRight: 8 
+            }}>
+              <Icon 
+                name="trophy-outline" 
+                size={24} 
+                color="#D4AF37"
+              />
+            </Animated.View>
             <Text style={styles.score}>{score}</Text>
           </View>
           
@@ -130,7 +150,12 @@ const PlayQuizScreen = ({ route, navigation }) => {
                 color="#D4AF37" 
                 style={styles.headerIcon}
               />
-              <Text style={styles.timer}>{timeLeft}s</Text>
+              <Text style={[
+                styles.timer,
+                timeLeft <= 10 && styles.timerWarning
+              ]}>
+                {timeLeft}s
+              </Text>
             </View>
           )}
           {mode === 'sudden-death' && (
@@ -242,6 +267,10 @@ const styles = StyleSheet.create({
   timer: {
     fontSize: 20,
     color: '#D4AF37',
+    fontWeight: 'bold',
+  },
+  timerWarning: {
+    color: '#FF4444', // Red color for warning
     fontWeight: 'bold',
   },
   lives: {
