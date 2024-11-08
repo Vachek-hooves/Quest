@@ -16,6 +16,7 @@ import LottieView from 'lottie-react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import RNFS from 'react-native-fs';
 import { useAppContext } from '../../store/appContext';
+import Toast from 'react-native-toast-message';
 
 const UserScreen = () => {
 
@@ -44,6 +45,16 @@ const UserScreen = () => {
         const parsedUser = JSON.parse(userData);
         setUser(parsedUser);
         setHasAccount(true);
+        
+        // Show welcome toast message
+        Toast.show({
+          type: 'success',
+          text1: 'Welcome back!',
+          text2: `Good to see you, ${parsedUser.name || 'User'}! 👋`,
+          position: 'top',
+          topOffset: 50,
+          visibilityTime: 3000,
+        });
       } else {
         setHasAccount(false);
       }
@@ -51,6 +62,15 @@ const UserScreen = () => {
     } catch (error) {
       console.error('Error loading user data:', error);
       setIsLoading(false);
+      
+      // Show error toast if something goes wrong
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Failed to load user data',
+        position: 'top',
+        topOffset: 50,
+      });
     }
   };
 
@@ -96,8 +116,36 @@ const UserScreen = () => {
       setUser(updatedUser);
       setHasAccount(true);
       setShowEditModal(false);
+
+      // Show welcome toast for new users
+      if (!hasAccount) {
+        Toast.show({
+          type: 'success',
+          text1: 'Welcome!',
+          text2: `Profile created successfully, ${tempUser.name}! 🎉`,
+          position: 'top',
+          topOffset: 50,
+          visibilityTime: 3000,
+        });
+      } else {
+        Toast.show({
+          type: 'success',
+          text1: 'Profile Updated',
+          text2: 'Your changes have been saved successfully! ✨',
+          position: 'top',
+          topOffset: 50,
+          visibilityTime: 2000,
+        });
+      }
     } catch (error) {
       console.error('Error saving user data:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Failed to save profile changes',
+        position: 'top',
+        topOffset: 50,
+      });
     }
   };
 
