@@ -108,7 +108,7 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     imageContainer: {
-        height: 300,
+        height: 600,
         position: 'relative',
     },
     headerImage: {
