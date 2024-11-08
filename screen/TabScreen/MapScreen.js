@@ -1,17 +1,31 @@
-import { StyleSheet, Text, View, Image, Modal, TouchableOpacity, ScrollView, ImageBackground, TextInput,SafeAreaView } from 'react-native';
-import MapView, { Marker, Callout } from 'react-native-maps';
+import {
+  StyleSheet,
+  Text,
+  View,
+  Image,
+  Modal,
+  TouchableOpacity,
+  ScrollView,
+  ImageBackground,
+  TextInput,
+  SafeAreaView,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native';
+import MapView, {Marker, Callout} from 'react-native-maps';
 import LinearGradient from 'react-native-linear-gradient';
-import { attractions } from '../../data/attractions';
-import { useState, useEffect } from 'react';
-import { launchImageLibrary } from 'react-native-image-picker';
-import { useAppContext } from '../../store/appContext';
+import {attractions} from '../../data/attractions';
+import {useState, useEffect} from 'react';
+import {launchImageLibrary} from 'react-native-image-picker';
+import {useAppContext} from '../../store/appContext';
 import RNFS from 'react-native-fs';
 import LottieView from 'lottie-react-native';
-import { Animated } from 'react-native';
+import {Animated} from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 
 const MapScreen = () => {
-  const { userMarkers, addUserMarker, favorites, toggleFavorite } = useAppContext();
+  const {userMarkers, addUserMarker, favorites, toggleFavorite} =
+    useAppContext();
   const [selectedAttraction, setSelectedAttraction] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -20,7 +34,7 @@ const MapScreen = () => {
     description: '',
     interest: '',
     image: null,
-    coordinates: null
+    coordinates: null,
   });
 
   const [imageExistsMap, setImageExistsMap] = useState({});
@@ -47,18 +61,18 @@ const MapScreen = () => {
         toValue: 1,
         useNativeDriver: true,
         tension: 50,
-        friction: 7
+        friction: 7,
       }).start();
     } else {
       Animated.timing(popupAnimation, {
         toValue: 0,
         duration: 200,
-        useNativeDriver: true
+        useNativeDriver: true,
       }).start();
     }
   }, [showCreatePopup]);
 
-  const checkImageExists = async (path) => {
+  const checkImageExists = async path => {
     try {
       return await RNFS.exists(path);
     } catch (error) {
@@ -67,30 +81,29 @@ const MapScreen = () => {
     }
   };
 
-  const getImageSource = (image) => {
+  const getImageSource = image => {
     if (typeof image === 'string') {
       if (imageExistsMap[image]) {
-        return { uri: `file://${image}` };
+        return {uri: `file://${image}`};
       }
       return require('../../assets/image/default-marker.png');
     }
     return image; // For pre-defined attractions
   };
 
-  const renderMarkerImage = (imagePath) => {
-    return <Image 
-      source={getImageSource(imagePath)} 
-      style={styles.markerImage} 
-    />;
+  const renderMarkerImage = imagePath => {
+    return (
+      <Image source={getImageSource(imagePath)} style={styles.markerImage} />
+    );
   };
 
-  const handleMapPress = (event) => {
+  const handleMapPress = event => {
     console.log(event.nativeEvent);
     if (event.nativeEvent.action !== 'marker-press') {
-      const { coordinate } = event.nativeEvent;
+      const {coordinate} = event.nativeEvent;
       setNewMarker(prev => ({
         ...prev,
-        coordinates: coordinate
+        coordinates: coordinate,
       }));
       setShowCreatePopup(true);
     }
@@ -105,13 +118,18 @@ const MapScreen = () => {
     if (!result.didCancel && result.assets?.[0]) {
       setNewMarker(prev => ({
         ...prev,
-        image: result.assets[0].uri
+        image: result.assets[0].uri,
       }));
     }
   };
 
   const handleCreateMarker = async () => {
-    if (newMarker.location && newMarker.description && newMarker.image && newMarker.coordinates) {
+    if (
+      newMarker.location &&
+      newMarker.description &&
+      newMarker.image &&
+      newMarker.coordinates
+    ) {
       await addUserMarker({
         ...newMarker,
         id: Date.now().toString(),
@@ -122,7 +140,7 @@ const MapScreen = () => {
         description: '',
         interest: '',
         image: null,
-        coordinates: null
+        coordinates: null,
       });
     }
   };
@@ -132,16 +150,14 @@ const MapScreen = () => {
     setShowCreateModal(true);
   };
 
-  const isFavorite = (place) => {
-    return favorites.some(fav => 
-      fav.id === place.id && 
-      fav.location === place.location
+  const isFavorite = place => {
+    return favorites.some(
+      fav => fav.id === place.id && fav.location === place.location,
     );
   };
 
   return (
     <View style={styles.container}>
-      
       <MapView
         onPress={handleMapPress}
         initialRegion={{
@@ -152,10 +168,7 @@ const MapScreen = () => {
         }}
         style={styles.map}>
         {newMarker.coordinates && showCreateModal && (
-          <Marker
-            coordinate={newMarker.coordinates}
-            pinColor="#D4AF37"
-          />
+          <Marker coordinate={newMarker.coordinates} pinColor="#D4AF37" />
         )}
 
         {attractions.map(attraction => (
@@ -164,21 +177,21 @@ const MapScreen = () => {
             coordinate={attraction.coordinates}
             title={attraction.location}
             description={attraction.description}
-            onPress={(e) => {
+            onPress={e => {
               e.stopPropagation();
             }}>
             <Image source={attraction.image} style={styles.markerImage} />
             <Callout
-              onPress={(e) => {
+              onPress={e => {
                 e.stopPropagation();
                 setSelectedAttraction(attraction);
                 setShowModal(true);
               }}>
               <View style={styles.calloutContainer}>
                 <Text style={styles.calloutTitle}>{attraction.location}</Text>
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={styles.calloutButton}
-                  onPress={(e) => {
+                  onPress={e => {
                     e.stopPropagation();
                     setSelectedAttraction(attraction);
                     setShowModal(true);
@@ -196,21 +209,21 @@ const MapScreen = () => {
             coordinate={marker.coordinates}
             title={marker.location}
             description={marker.description}
-            onPress={(e) => {
+            onPress={e => {
               e.stopPropagation();
             }}>
             {renderMarkerImage(marker.image)}
             <Callout
-              onPress={(e) => {
+              onPress={e => {
                 e.stopPropagation();
                 setSelectedAttraction(marker);
                 setShowModal(true);
               }}>
               <View style={styles.calloutContainer}>
                 <Text style={styles.calloutTitle}>{marker.location}</Text>
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={styles.calloutButton}
-                  onPress={(e) => {
+                  onPress={e => {
                     e.stopPropagation();
                     setSelectedAttraction(marker);
                     setShowModal(true);
@@ -224,17 +237,23 @@ const MapScreen = () => {
       </MapView>
 
       {showCreatePopup && (
-        <Animated.View style={[styles.createPopup, {
-          transform: [{
-            scale: popupAnimation.interpolate({
-              inputRange: [0, 1],
-              outputRange: [0.3, 1]
-            })
-          }],
-          opacity: popupAnimation
-        }]}>
-          <TouchableOpacity 
-            style={styles.closeIcon} 
+        <Animated.View
+          style={[
+            styles.createPopup,
+            {
+              transform: [
+                {
+                  scale: popupAnimation.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0.3, 1],
+                  }),
+                },
+              ],
+              opacity: popupAnimation,
+            },
+          ]}>
+          <TouchableOpacity
+            style={styles.closeIcon}
             onPress={() => setShowCreatePopup(false)}>
             <Icon name="close-circle" size={28} color="#D4AF37" />
           </TouchableOpacity>
@@ -247,7 +266,7 @@ const MapScreen = () => {
           <LinearGradient
             colors={['#D4AF37', '#C5A028']}
             style={styles.popupCreateButton}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.popupCreateButtonInner}
               onPress={handleCreatePress}>
               <Text style={styles.popupCreateButtonText}>Create</Text>
@@ -275,27 +294,30 @@ const MapScreen = () => {
         }}>
         {selectedAttraction && (
           <View style={styles.modalContainer}>
-            <ImageBackground 
+            <ImageBackground
               source={getImageSource(selectedAttraction.image)}
               style={styles.modalBackground}
               blurRadius={2}>
-                
               <LinearGradient
                 colors={['rgba(0,0,0,0.7)', 'rgba(0,0,0,0.9)']}
                 style={styles.gradientOverlay}>
                 <ScrollView>
                   <View style={styles.modalContent}>
-                    <TouchableOpacity 
+                    <TouchableOpacity
                       style={styles.favoriteButton}
                       onPress={() => toggleFavorite(selectedAttraction)}>
-                      <Icon 
-                        name={isFavorite(selectedAttraction) ? "heart" : "heart-outline"} 
-                        size={40} 
-                        color="#D4AF37" 
+                      <Icon
+                        name={
+                          isFavorite(selectedAttraction)
+                            ? 'heart'
+                            : 'heart-outline'
+                        }
+                        size={40}
+                        color="#D4AF37"
                       />
                     </TouchableOpacity>
-                    
-                    <Image 
+
+                    <Image
                       source={getImageSource(selectedAttraction.image)}
                       style={styles.modalImage}
                     />
@@ -309,18 +331,16 @@ const MapScreen = () => {
                       colors={['#D4AF37', '#C5A028']}
                       style={styles.divider}
                     />
-                    <Text style={styles.modalSubtitle}>
-                      Points of Interest
-                    </Text>
+                    <Text style={styles.modalSubtitle}>Points of Interest</Text>
                     <Text style={styles.modalText}>
                       {selectedAttraction.interest}
                     </Text>
-                    
+
                     {/* Back Button at bottom */}
                     <LinearGradient
                       colors={['#D4AF37', '#C5A028']}
                       style={styles.backButton}>
-                      <TouchableOpacity 
+                      <TouchableOpacity
                         style={styles.backButtonInner}
                         onPress={() => {
                           setShowModal(false);
@@ -343,76 +363,93 @@ const MapScreen = () => {
         transparent={true}
         visible={showCreateModal}
         onRequestClose={() => setShowCreateModal(false)}>
-        <View style={styles.modalContainer}>
-          <TouchableOpacity 
-            style={styles.modalCloseIcon} 
-            onPress={() => setShowCreateModal(false)}>
-            <Icon name="close-circle" size={32} color="#D4AF37" />
-          </TouchableOpacity>
-          <LinearGradient
-            colors={['rgba(0,0,0,0.8)', 'rgba(0,0,0,0.95)']}
-            style={styles.gradientOverlay}>
-            <ScrollView>
-              <View style={styles.modalContent}>
-                <Text style={styles.modalTitle}>Create New Marker</Text>
-                
-                <TouchableOpacity onPress={pickImage} style={styles.imagePickerButton}>
-                  {newMarker.image ? (
-                    <Image source={{ uri: newMarker.image }} style={styles.previewImage} />
-                  ) : (
-                    <LinearGradient
-                      colors={['#D4AF37', '#C5A028']}
-                      style={styles.uploadButton}>
-                      <Text style={styles.uploadButtonText}>Choose Image</Text>
-                    </LinearGradient>
-                  )}
-                </TouchableOpacity>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.keyboardAvoidView}>
+          <View style={styles.modalContainer}>
+            <TouchableOpacity
+              style={styles.modalCloseIcon}
+              onPress={() => setShowCreateModal(false)}>
+              <Icon name="close-circle" size={32} color="#D4AF37" />
+            </TouchableOpacity>
+            <LinearGradient
+              colors={['rgba(0,0,0,0.8)', 'rgba(0,0,0,0.95)']}
+              style={styles.gradientOverlay}>
+              <ScrollView>
+                <View style={styles.modalContent}>
+                  <Text style={styles.modalTitle}>Create New Marker</Text>
 
-                <TextInput
-                  style={styles.input}
-                  placeholder="Location Name"
-                  placeholderTextColor="#888"
-                  value={newMarker.location}
-                  onChangeText={(text) => setNewMarker(prev => ({...prev, location: text}))}
-                />
-
-                <TextInput
-                  style={[styles.input, styles.textArea]}
-                  placeholder="Description"
-                  placeholderTextColor="#888"
-                  multiline
-                  value={newMarker.description}
-                  onChangeText={(text) => setNewMarker(prev => ({...prev, description: text}))}
-                />
-
-                <TextInput
-                  style={[styles.input, styles.textArea]}
-                  placeholder="Points of Interest"
-                  placeholderTextColor="#888"
-                  multiline
-                  value={newMarker.interest}
-                  onChangeText={(text) => setNewMarker(prev => ({...prev, interest: text}))}
-                />
-
-                <LinearGradient
-                  colors={['#D4AF37', '#C5A028']}
-                  style={styles.closeButton}>
-                  <TouchableOpacity 
-                    style={styles.closeButtonInner}
-                    onPress={handleCreateMarker}>
-                    <Text style={styles.closeButtonText}>Create Marker</Text>
+                  <TouchableOpacity
+                    onPress={pickImage}
+                    style={styles.imagePickerButton}>
+                    {newMarker.image ? (
+                      <Image
+                        source={{uri: newMarker.image}}
+                        style={styles.previewImage}
+                      />
+                    ) : (
+                      <LinearGradient
+                        colors={['#D4AF37', '#C5A028']}
+                        style={styles.uploadButton}>
+                        <Text style={styles.uploadButtonText}>
+                          Choose Image
+                        </Text>
+                      </LinearGradient>
+                    )}
                   </TouchableOpacity>
-                </LinearGradient>
 
-                <TouchableOpacity 
-                  style={styles.cancelButton}
-                  onPress={() => setShowCreateModal(false)}>
-                  <Text style={styles.cancelButtonText}>Cancel</Text>
-                </TouchableOpacity>
-              </View>
-            </ScrollView>
-          </LinearGradient>
-        </View>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Location Name"
+                    placeholderTextColor="#888"
+                    value={newMarker.location}
+                    onChangeText={text =>
+                      setNewMarker(prev => ({...prev, location: text}))
+                    }
+                  />
+
+                  <TextInput
+                    style={[styles.input, styles.textArea]}
+                    placeholder="Description"
+                    placeholderTextColor="#888"
+                    multiline
+                    value={newMarker.description}
+                    onChangeText={text =>
+                      setNewMarker(prev => ({...prev, description: text}))
+                    }
+                  />
+
+                  <TextInput
+                    style={[styles.input, styles.textArea]}
+                    placeholder="Points of Interest"
+                    placeholderTextColor="#888"
+                    multiline
+                    value={newMarker.interest}
+                    onChangeText={text =>
+                      setNewMarker(prev => ({...prev, interest: text}))
+                    }
+                  />
+
+                  <LinearGradient
+                    colors={['#D4AF37', '#C5A028']}
+                    style={styles.closeButton}>
+                    <TouchableOpacity
+                      style={styles.closeButtonInner}
+                      onPress={handleCreateMarker}>
+                      <Text style={styles.closeButtonText}>Create Marker</Text>
+                    </TouchableOpacity>
+                  </LinearGradient>
+
+                  <TouchableOpacity
+                    style={styles.cancelButton}
+                    onPress={() => setShowCreateModal(false)}>
+                    <Text style={styles.cancelButtonText}>Cancel</Text>
+                  </TouchableOpacity>
+                </View>
+              </ScrollView>
+            </LinearGradient>
+          </View>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );
@@ -431,6 +468,9 @@ const additionalStyles = {
   textArea: {
     height: 100,
     textAlignVertical: 'top',
+  },
+  keyboardAvoidView:{
+    flex:1
   },
   imagePickerButton: {
     width: '100%',
@@ -476,7 +516,6 @@ const additionalStyles = {
     borderWidth: 1,
     borderColor: '#D4AF37',
     marginTop: 50,
-    
   },
   instructionText: {
     color: '#FFFFFF',
@@ -636,7 +675,7 @@ const additionalStyles = {
     backgroundColor: 'rgba(0,0,0,0.3)',
     padding: 10,
     borderRadius: 20,
-    margin:5
+    margin: 5,
   },
 };
 
@@ -646,7 +685,6 @@ const styles = StyleSheet.create({
     // backgroundColor: '#fff',
   },
   map: {
-    
     flex: 1,
   },
   markerImage: {
