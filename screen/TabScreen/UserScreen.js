@@ -215,6 +215,50 @@ const UserScreen = () => {
     );
   };
 
+  const handleDeleteUser = async () => {
+    try {
+      // Delete user image if it exists
+      if (user.image) {
+        try {
+          await RNFS.unlink(user.image);
+        } catch (error) {
+          console.error('Error deleting image file:', error);
+        }
+      }
+
+      // Clear user data from AsyncStorage
+      await AsyncStorage.setItem('userData', '');
+      
+      // Reset state
+      setUser({
+        name: '',
+        image: null,
+      });
+      setHasAccount(false);
+      setShowEditModal(false);
+
+      // Show success toast
+      Toast.show({
+        type: 'success',
+        text1: 'Profile Deleted',
+        text2: 'Your profile has been successfully deleted',
+        position: 'top',
+        topOffset: 50,
+        visibilityTime: 3000,
+      });
+
+    } catch (error) {
+      console.error('Error deleting user data:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Failed to delete profile',
+        position: 'top',
+        topOffset: 50,
+      });
+    }
+  };
+
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
@@ -334,6 +378,16 @@ const UserScreen = () => {
                     <Text style={styles.saveButtonText}>Save Changes</Text>
                   </TouchableOpacity>
                 </LinearGradient>
+
+                {hasAccount && (
+                  <TouchableOpacity
+                    style={styles.deleteButton}
+                    onPress={handleDeleteUser}>
+                    <Icon name="trash-outline" size={24} color="#FF4444" />
+                    <Text style={styles.deleteButtonText}>Delete Profile</Text>
+                  </TouchableOpacity>
+                )}
+
                 <View style={styles.lottieContainer}>
                   
                 </View>
@@ -529,5 +583,23 @@ const styles = StyleSheet.create({
     color: '#D4AF37',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  deleteButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 20,
+    padding: 15,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255, 68, 68, 0.1)',
+    borderWidth: 1,
+    borderColor: '#FF4444',
+    width: '100%',
+  },
+  deleteButtonText: {
+    color: '#FF4444',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginLeft: 10,
   },
 });

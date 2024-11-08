@@ -27,7 +27,7 @@ const UserWelcomeScreen = () => {
     // Navigate to TabNavigator after 3 seconds
     const timer = setTimeout(() => {
       navigation.replace('TabNavigator');
-    }, 3000);
+    }, 4000);
 
     // Cleanup timer on component unmount
     return () => clearTimeout(timer);
@@ -53,7 +53,7 @@ const UserWelcomeScreen = () => {
             source={require('../../assets/animation/welcome.json')}
             autoPlay
             style={styles.lottieWelcome}
-            speed={0.7}
+            speed={0.6}
           />
           {/* <Text style={styles.welcomeText}>Welcome to</Text> */}
           <Text style={styles.titleText}>Adventure</Text>
