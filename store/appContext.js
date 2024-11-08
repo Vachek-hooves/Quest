@@ -2,6 +2,7 @@ import {createContext, useState, useContext, useEffect} from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import RNFS from 'react-native-fs';
 import { quizData } from '../data/quizData';
+import Toast from 'react-native-toast-message';
 
 export const AppContext = createContext();
 
@@ -152,6 +153,14 @@ export const AppProvider = ({children}) => {
             
             if (correctAnswers > (newTimedState.highScore || 0)) {
                 newTimedState.highScore = correctAnswers;
+                Toast.show({
+                    type: 'success',
+                    text1: 'New High Score!',
+                    text2: `Congratulations! You scored ${correctAnswers} points!`,
+                    position: 'top',
+                    visibilityTime: 5000,
+                    marginTop: 100,
+                });
             }
             
             if (!newTimedState.bestTime || timePerQuestion < newTimedState.bestTime) {
@@ -189,6 +198,13 @@ export const AppProvider = ({children}) => {
             setSuddenDeathQuizState(newSuddenState);
         } catch (error) {
             console.error('Error updating timed quiz score:', error);
+            Toast.show({
+                type: 'error',
+                text1: 'Error',
+                text2: 'Failed to update score',
+                position: 'top',
+                visibilityTime: 5000,
+            });
         }
     };
 
@@ -248,6 +264,13 @@ export const AppProvider = ({children}) => {
             setSuddenDeathQuizState(newState);
         } catch (error) {
             console.error('Error updating lives:', error);
+            Toast.show({
+                type: 'error',
+                text1: 'Error',
+                text2: 'Failed to update lives',
+                position: 'top',
+                visibilityTime: 5000,
+            });
         }
     };
 
@@ -321,14 +344,38 @@ export const AppProvider = ({children}) => {
 
             if (index >= 0) {
                 newFavorites.splice(index, 1);
+                Toast.show({
+                    type: 'success',
+                    text1: 'Removed from favorites',
+                    text2: `${place.location} was removed from your favorites`,
+                    position: 'top',
+                    visibilityTime: 5000,
+                    marginTop: 100,
+                });
             } else {
                 newFavorites.push(place);
+                Toast.show({
+                    type: 'success',
+                    text1: 'Added to favorites',
+                    text2: `${place.location} was added to your favorites`,
+                    position: 'top',
+                    visibilityTime: 5000,
+                    marginTop: 100,
+                });
             }
 
             await AsyncStorage.setItem('favorites', JSON.stringify(newFavorites));
             setFavorites(newFavorites);
         } catch (error) {
             console.error('Error updating favorites:', error);
+            Toast.show({
+                type: 'error',
+                text1: 'Error',
+                text2: 'Failed to update favorites',
+                position: 'top',
+                visibilityTime: 5000,
+                marginTop: 100,
+            });
         }
     };
 
