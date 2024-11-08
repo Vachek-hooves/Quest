@@ -18,6 +18,8 @@ const PlayQuizScreen = ({ route, navigation }) => {
   const [timeLeft, setTimeLeft] = useState(40); // for timed mode
   const [gameOver, setGameOver] = useState(false);
   const [startTime, setStartTime] = useState(null);
+  const [selectedAnswer, setSelectedAnswer] = useState(null);
+  const [isCorrect, setIsCorrect] = useState(null);
 
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const scoreIconScale = useRef(new Animated.Value(1)).current;
@@ -57,16 +59,20 @@ const PlayQuizScreen = ({ route, navigation }) => {
     }
   }, []);
 
-  const handleAnswer = (selectedOption) => {
+  const handleAnswer = async (selectedOption) => {
     const currentQuestion = questions[currentQuestionIndex];
-    const isCorrect = selectedOption === currentQuestion.correctOption;
+    const isAnswerCorrect = selectedOption === currentQuestion.correctOption;
+    
+    setSelectedAnswer(selectedOption);
+    setIsCorrect(isAnswerCorrect);
 
-    if (mode === 'sudden-death' && !isCorrect) {
+    if (mode === 'sudden-death' && !isAnswerCorrect) {
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Show feedback for 1 second
       handleGameOver();
       return;
     }
 
-    if (isCorrect) {
+    if (isAnswerCorrect) {
       setScore(prev => prev + 1);
       animateScoreIcon();
       Animated.sequence([
@@ -81,17 +87,28 @@ const PlayQuizScreen = ({ route, navigation }) => {
           useNativeDriver: true,
         }),
       ]).start();
-
-      if (currentQuestionIndex < questions.length - 1) {
-        setCurrentQuestionIndex(prev => prev + 1);
-      } else if (mode === 'sudden-death') {
-        setQuestions(prev => [...prev, ...getRandomQuestions(10)]);
-      }
-    } else if (mode === 'timed') {
-      if (currentQuestionIndex < questions.length - 1) {
-        setCurrentQuestionIndex(prev => prev + 1);
-      }
     }
+
+    // Wait for feedback animation
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    setSelectedAnswer(null);
+    setIsCorrect(null);
+
+    if (currentQuestionIndex < questions.length - 1) {
+      setCurrentQuestionIndex(prev => prev + 1);
+    } else if (mode === 'sudden-death') {
+      setQuestions(prev => [...prev, ...getRandomQuestions(10)]);
+    } else {
+      handleGameOver();
+    }
+  };
+
+  const getOptionStyle = (option) => {
+    if (selectedAnswer !== option) return ['#D4AF37', '#C5A028'];
+    return isCorrect ? 
+      ['#4CAF50', '#45A049'] : // Green gradient for correct
+      ['#FF4444', '#CC0000']; // Red gradient for wrong
   };
 
   const handleGameOver = async () => {
@@ -176,17 +193,17 @@ const PlayQuizScreen = ({ route, navigation }) => {
           <Text style={styles.question}>{currentQuestion.question}</Text>
         </Animated.View>
 
-        {/* Options */}
+        {/* Options with feedback */}
         <View style={styles.optionsContainer}>
           {currentQuestion.options.map((option, index) => (
             <TouchableOpacity
               key={index}
               style={styles.optionButton}
               onPress={() => handleAnswer(option)}
-              disabled={gameOver}
+              disabled={gameOver || selectedAnswer !== null}
             >
               <LinearGradient
-                colors={['#D4AF37', '#C5A028']}
+                colors={getOptionStyle(option)}
                 style={styles.optionGradient}
               >
                 <Text style={styles.optionText}>{option}</Text>
@@ -195,17 +212,55 @@ const PlayQuizScreen = ({ route, navigation }) => {
           ))}
         </View>
 
-        {/* Game Over Modal */}
+        {/* Updated Game Over Modal */}
         {gameOver && (
           <View style={styles.gameOverContainer}>
-            <Text style={styles.gameOverText}>Game Over!</Text>
-            <Text style={styles.finalScore}>Final Score: {score}</Text>
-            <TouchableOpacity
-              style={styles.playAgainButton}
-              onPress={() => navigation.goBack()}
+            <LinearGradient
+              colors={['#2A2A2A', '#1A1A1A']}
+              style={styles.gameOverContent}
             >
-              <Text style={styles.playAgainText}>Back to Menu</Text>
-            </TouchableOpacity>
+              <Text style={styles.gameOverText}>Game Over!</Text>
+              
+              <View style={styles.resultsContainer}>
+                <View style={styles.resultItem}>
+                  <Icon name="trophy-outline" size={30} color="#D4AF37" />
+                  <Text style={styles.resultLabel}>Final Score</Text>
+                  <Text style={styles.resultValue}>{score}</Text>
+                </View>
+
+                {mode === 'timed' && (
+                  <View style={styles.resultItem}>
+                    <Icon name="timer-outline" size={30} color="#D4AF37" />
+                    <Text style={styles.resultLabel}>Time per Question</Text>
+                    <Text style={styles.resultValue}>
+                      {((Date.now() - startTime) / score / 1000).toFixed(1)}s
+                    </Text>
+                  </View>
+                )}
+
+                {mode === 'sudden-death' && (
+                  <View style={styles.resultItem}>
+                    <Icon name="trending-up" size={30} color="#D4AF37" />
+                    <Text style={styles.resultLabel}>Best Streak</Text>
+                    <Text style={styles.resultValue}>{score}</Text>
+                  </View>
+                )}
+              </View>
+
+              <View style={styles.gameOverButtons}>
+                <TouchableOpacity
+                  style={styles.gameOverButton}
+                  onPress={() => navigation.goBack()}
+                >
+                  <LinearGradient
+                    colors={['#D4AF37', '#C5A028']}
+                    style={styles.gameOverButtonGradient}
+                  >
+                    <Text style={styles.gameOverButtonText}>Back to Menu</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              </View>
+            </LinearGradient>
           </View>
         )}
       </LinearGradient>
@@ -308,28 +363,59 @@ const styles = StyleSheet.create({
   },
   gameOverContainer: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(26, 26, 26, 0.9)',
+    backgroundColor: 'rgba(26, 26, 26, 0.95)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
   },
-  gameOverText: {
-    fontSize: 32,
-    color: '#D4AF37',
-    fontWeight: 'bold',
-    marginBottom: 20,
+  gameOverContent: {
+    width: '100%',
+    padding: 20,
+    borderRadius: 15,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(212, 175, 55, 0.3)',
   },
-  finalScore: {
-    fontSize: 24,
-    color: '#FFFFFF',
-    marginBottom: 30,
+  resultsContainer: {
+    width: '100%',
+    marginVertical: 20,
   },
-  playAgainButton: {
-    backgroundColor: '#D4AF37',
+  resultItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(26, 26, 26, 0.5)',
     padding: 15,
     borderRadius: 10,
+    marginVertical: 10,
   },
-  playAgainText: {
+  resultLabel: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    marginLeft: 15,
+    flex: 1,
+  },
+  resultValue: {
+    color: '#D4AF37',
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginLeft: 10,
+  },
+  gameOverButtons: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 15,
+    marginTop: 20,
+  },
+  gameOverButton: {
+    borderRadius: 10,
+    overflow: 'hidden',
+    width: '60%',
+  },
+  gameOverButtonGradient: {
+    padding: 15,
+    alignItems: 'center',
+  },
+  gameOverButtonText: {
     color: '#1A1A1A',
     fontSize: 18,
     fontWeight: 'bold',
