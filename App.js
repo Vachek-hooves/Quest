@@ -36,7 +36,7 @@ const TabNavigator = () => {
 
   useEffect(() => {
     const subscription = AppState.addEventListener('change', nextAppState => {
-      if (nextAppState === 'active' && isPlayMusic) {
+      if (nextAppState === 'active' && isPlaySound) {
         playBackgroundMusic();
       } else if (nextAppState === 'inactive' || nextAppState === 'background') {
         pauseBackgroundMusic();
