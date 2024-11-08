@@ -3,7 +3,7 @@ import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {UserScreen, MapScreen, QuizChooseScreen} from './screen/TabScreen';
-import {TimeQuizScreen, SuddenQuizScreen} from './screen/StackScreen';
+import {TimeQuizScreen, SuddenQuizScreen, PlayQuizScreen} from './screen/StackScreen';
 import Icon from 'react-native-vector-icons/Ionicons';
 import LinearGradient from 'react-native-linear-gradient';
 
@@ -90,6 +90,7 @@ function App() {
           <Stack.Screen name='TabNavigator' component={TabNavigator} />
           <Stack.Screen name='TimeQuizScreen' component={TimeQuizScreen} />
           <Stack.Screen name='SuddenQuizScreen' component={SuddenQuizScreen} />
+          <Stack.Screen name='PlayQuizScreen' component={PlayQuizScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </AppProvider>

@@ -56,7 +56,7 @@ const QuizChooseScreen = () => {
           
           {/* Timed Challenge Button */}
           <TouchableOpacity 
-            onPress={() => navigation.navigate('TimeQuizScreen', { mode: 'timed' })}
+            onPress={() => navigation.navigate('PlayQuizScreen', { mode: 'timed' })}
             style={styles.modeContainer}>
             <LinearGradient
               colors={['#D4AF37', '#C5A028', '#AA8A1B']}
@@ -83,7 +83,7 @@ const QuizChooseScreen = () => {
 
           {/* Sudden Death Button */}
           <TouchableOpacity 
-            onPress={() => navigation.navigate('SuddenQuizScreen', { mode: 'sudden-death' })}
+            onPress={() => navigation.navigate('PlayQuizScreen', { mode: 'sudden-death' })}
             style={styles.modeContainer}>
             <LinearGradient
               colors={['#D4AF37', '#C5A028', '#AA8A1B']}
@@ -119,6 +119,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#1A1A1A',
+    
   },
   gradient: {
     flex: 1,
