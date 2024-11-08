@@ -45,11 +45,6 @@ export const quizData = [
         correctOption: "Seven natural springs flowing through the forest"
     },
     {
-        question: "What's a major attraction at Casino Rodos?",
-        options: ["Hiking trails", "Gaming and fine dining", "Ancient ruins", "A butterfly sanctuary"],
-        correctOption: "Gaming and fine dining"
-    },
-    {
         question: "The Temple of Apollo is located at which site?",
         options: ["The Seven Springs", "Ancient Ialyssos", "Rhodes City", "Kamiros"],
         correctOption: "Rhodes City"
@@ -90,11 +85,6 @@ export const quizData = [
         correctOption: "The Seven Springs"
     },
     {
-        question: "What can be explored in Kamiros?",
-        options: ["Waterfalls", "Temple of Athena", "Casino", "Sand dunes"],
-        correctOption: "Temple of Athena"
-    },
-    {
         question: "Which destination is known for its golden sand and panoramic views?",
         options: ["Tsambika Beach", "Palace of the Grand Master", "Butterfly Valley", "Ancient Kamiros"],
         correctOption: "Tsambika Beach"
@@ -108,11 +98,6 @@ export const quizData = [
         question: "What is one of the main reasons tourists visit the Palace of the Grand Master?",
         options: ["Beach access", "Ancient Greek ruins", "Medieval architecture and artifacts", "Hiking trails"],
         correctOption: "Medieval architecture and artifacts"
-    },
-    {
-        question: "Where would you find a casino experience on the island of Rhodes?",
-        options: ["Tsambika Beach", "Rhodes City", "Lindos", "Kamiros"],
-        correctOption: "Rhodes City"
     },
     {
         question: "The Acropolis of Rhodes is located in which area of the island?",

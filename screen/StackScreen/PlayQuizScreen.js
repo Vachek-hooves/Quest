@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, TouchableOpacity, Animated } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, Animated, Alert } from 'react-native';
 import React, { useState, useEffect, useRef } from 'react';
 import { useAppContext } from '../../store/appContext';
 import LinearGradient from 'react-native-linear-gradient';
@@ -9,8 +9,12 @@ const PlayQuizScreen = ({ route, navigation }) => {
   const { 
     getRandomQuestions, 
     updateTimedQuizScore, 
-    updateSuddenDeathScore 
+    updateSuddenDeathLives,
+    suddenDeathQuizState,
+    resetSuddenDeathLives,
+    convertScoreToLives
   } = useAppContext();
+  console.log(suddenDeathQuizState);
 
   const [questions, setQuestions] = useState([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -20,6 +24,7 @@ const PlayQuizScreen = ({ route, navigation }) => {
   const [startTime, setStartTime] = useState(null);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [isCorrect, setIsCorrect] = useState(null);
+  const [correctStreak, setCorrectStreak] = useState(0); // Track correct answers
 
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const scoreIconScale = useRef(new Animated.Value(1)).current;
@@ -42,7 +47,7 @@ const PlayQuizScreen = ({ route, navigation }) => {
   };
 
   useEffect(() => {
-    setQuestions(getRandomQuestions(mode === 'timed' ? 20 : 50)); // More questions for sudden death
+    setQuestions(getRandomQuestions(mode === 'timed' ? 20 : 50));
     if (mode === 'timed') {
       setStartTime(Date.now());
       const timer = setInterval(() => {
@@ -60,48 +65,62 @@ const PlayQuizScreen = ({ route, navigation }) => {
   }, []);
 
   const handleAnswer = async (selectedOption) => {
+    if (selectedAnswer !== null) return; // Prevent multiple selections
+    
     const currentQuestion = questions[currentQuestionIndex];
     const isAnswerCorrect = selectedOption === currentQuestion.correctOption;
     
     setSelectedAnswer(selectedOption);
     setIsCorrect(isAnswerCorrect);
 
-    if (mode === 'sudden-death' && !isAnswerCorrect) {
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Show feedback for 1 second
-      handleGameOver();
-      return;
+    if (mode === 'sudden-death') {
+      if (!isAnswerCorrect) {
+        // Wrong answer handling
+        if (suddenDeathQuizState.lives > 1) {
+          // Still has lives left
+          await updateSuddenDeathLives('use');
+          setTimeout(() => {
+            setSelectedAnswer(null);
+            setIsCorrect(null);
+            setCurrentQuestionIndex(prev => prev + 1);
+          }, 1000);
+        } else {
+          // Last life lost - game over
+          await updateSuddenDeathLives('use');
+          setTimeout(() => {
+            handleGameOver();
+          }, 1000);
+        }
+        setCorrectStreak(0);
+        return;
+      } else {
+        // Correct answer handling
+        const newStreak = correctStreak + 1;
+        setCorrectStreak(newStreak);
+        if (newStreak % 2 === 0) {
+          await updateSuddenDeathLives('earn', 2);
+        }
+      }
     }
 
     if (isAnswerCorrect) {
       setScore(prev => prev + 1);
       animateScoreIcon();
-      Animated.sequence([
-        Animated.timing(fadeAnim, {
-          toValue: 0,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-      ]).start();
     }
 
     // Wait for feedback animation
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    setSelectedAnswer(null);
-    setIsCorrect(null);
+    setTimeout(() => {
+      setSelectedAnswer(null);
+      setIsCorrect(null);
 
-    if (currentQuestionIndex < questions.length - 1) {
-      setCurrentQuestionIndex(prev => prev + 1);
-    } else if (mode === 'sudden-death') {
-      setQuestions(prev => [...prev, ...getRandomQuestions(10)]);
-    } else {
-      handleGameOver();
-    }
+      if (currentQuestionIndex < questions.length - 1) {
+        setCurrentQuestionIndex(prev => prev + 1);
+      } else if (mode === 'sudden-death') {
+        setQuestions(prev => [...prev, ...getRandomQuestions(10)]);
+      } else {
+        handleGameOver();
+      }
+    }, 1000);
   };
 
   const getOptionStyle = (option) => {
@@ -116,9 +135,116 @@ const PlayQuizScreen = ({ route, navigation }) => {
     if (mode === 'timed') {
       const timePerQuestion = (Date.now() - startTime) / score / 1000;
       await updateTimedQuizScore({ correctAnswers: score, timePerQuestion });
-    } else {
-      await updateSuddenDeathScore({ streak: score });
     }
+  };
+
+  const handleUseLife = async () => {
+    await updateSuddenDeathLives('use');
+    setSelectedAnswer(null);
+    setIsCorrect(null);
+    if (currentQuestionIndex < questions.length - 1) {
+      setCurrentQuestionIndex(prev => prev + 1);
+    } else {
+      setQuestions(prev => [...prev, ...getRandomQuestions(10)]);
+    }
+  };
+
+  const renderLives = () => {
+    if (mode !== 'sudden-death') return null;
+    
+    return (
+      <View style={styles.headerItem}>
+        <Icon 
+          name="heart" 
+          size={24} 
+          color="#D4AF37" 
+          style={styles.headerIcon}
+        />
+        <Text style={styles.lives}>
+          {suddenDeathQuizState.lives || 0}
+        </Text>
+      </View>
+    );
+  };
+
+  // Update the game over modal render
+  const renderGameOver = () => {
+    if (!gameOver) return null;
+
+    return (
+      <View style={styles.gameOverContainer}>
+        <LinearGradient
+          colors={['#2A2A2A', '#1A1A1A']}
+          style={styles.gameOverContent}
+        >
+          <Text style={styles.gameOverTitle}>Game Over!</Text>
+          
+          <View style={styles.resultsContainer}>
+            <View style={styles.resultItem}>
+              <Icon name="trophy" size={24} color="#D4AF37" />
+              <Text style={styles.resultLabel}>Final Score</Text>
+              <Text style={styles.resultValue}>{score}</Text>
+            </View>
+            
+            <View style={styles.resultItem}>
+              <Icon name="trending-up" size={24} color="#D4AF37" />
+              <Text style={styles.resultLabel}>Best Streak</Text>
+              <Text style={styles.resultValue}>{correctStreak}</Text>
+            </View>
+          </View>
+
+          <View style={styles.gameOverButtons}>
+            {mode === 'sudden-death' && suddenDeathQuizState.timedScoreBalance >= 2 && (
+              <TouchableOpacity
+                style={styles.gameOverButton}
+                onPress={async () => {
+                  const livesAdded = await convertScoreToLives(suddenDeathQuizState.timedScoreBalance);
+                  if (livesAdded > 0) {
+                    Alert.alert(
+                      'Lives Added', 
+                      `Converted ${livesAdded * 2} scores to ${livesAdded} lives!`,
+                      [
+                        {
+                          text: 'Continue Playing',
+                          onPress: () => {
+                            setGameOver(false);
+                            setScore(0);
+                            setCorrectStreak(0);
+                            setCurrentQuestionIndex(0);
+                            setQuestions(getRandomQuestions(50));
+                          }
+                        }
+                      ]
+                    );
+                  }
+                }}
+              >
+                <LinearGradient
+                  colors={['#D4AF37', '#C5A028']}
+                  style={styles.gameOverButtonGradient}
+                >
+                  <Text style={styles.gameOverButtonText}>
+                    Convert Score to Lives ({Math.floor(suddenDeathQuizState.timedScoreBalance / 2)} available)
+                  </Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            )}
+
+            <TouchableOpacity
+              style={styles.gameOverButton}
+              onPress={() => navigation.goBack()}
+            >
+              <LinearGradient
+                colors={['#D4AF37', '#C5A028']}
+                style={styles.gameOverButtonGradient}
+              >
+                <Text style={styles.gameOverButtonText}>Back to Menu</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+        </LinearGradient>
+      </View>
+    );
   };
 
   if (!questions.length) return null;
@@ -159,31 +285,17 @@ const PlayQuizScreen = ({ route, navigation }) => {
             <Text style={styles.score}>{score}</Text>
           </View>
           
-          {mode === 'timed' && (
+          {mode === 'sudden-death' ? (
             <View style={styles.headerItem}>
-              <Icon 
-                name="timer-outline" 
-                size={24} 
-                color="#D4AF37" 
-                style={styles.headerIcon}
-              />
-              <Text style={[
-                styles.timer,
-                timeLeft <= 10 && styles.timerWarning
-              ]}>
+              <Icon name="heart" size={24} color="#D4AF37" />
+              <Text style={styles.lives}>{suddenDeathQuizState.lives}</Text>
+            </View>
+          ) : (
+            <View style={styles.headerItem}>
+              <Icon name="timer-outline" size={24} color="#D4AF37" />
+              <Text style={[styles.timer, timeLeft <= 10 && styles.timerWarning]}>
                 {timeLeft}s
               </Text>
-            </View>
-          )}
-          {mode === 'sudden-death' && (
-            <View style={styles.headerItem}>
-              <Icon 
-                name="heart" 
-                size={24} 
-                color="#D4AF37" 
-                style={styles.headerIcon}
-              />
-              <Text style={styles.lives}>1</Text>
             </View>
           )}
         </View>
@@ -213,56 +325,7 @@ const PlayQuizScreen = ({ route, navigation }) => {
         </View>
 
         {/* Updated Game Over Modal */}
-        {gameOver && (
-          <View style={styles.gameOverContainer}>
-            <LinearGradient
-              colors={['#2A2A2A', '#1A1A1A']}
-              style={styles.gameOverContent}
-            >
-              <Text style={styles.gameOverText}>Game Over!</Text>
-              
-              <View style={styles.resultsContainer}>
-                <View style={styles.resultItem}>
-                  <Icon name="trophy-outline" size={30} color="#D4AF37" />
-                  <Text style={styles.resultLabel}>Final Score</Text>
-                  <Text style={styles.resultValue}>{score}</Text>
-                </View>
-
-                {mode === 'timed' && (
-                  <View style={styles.resultItem}>
-                    <Icon name="timer-outline" size={30} color="#D4AF37" />
-                    <Text style={styles.resultLabel}>Time per Question</Text>
-                    <Text style={styles.resultValue}>
-                      {((Date.now() - startTime) / score / 1000).toFixed(1)}s
-                    </Text>
-                  </View>
-                )}
-
-                {mode === 'sudden-death' && (
-                  <View style={styles.resultItem}>
-                    <Icon name="trending-up" size={30} color="#D4AF37" />
-                    <Text style={styles.resultLabel}>Best Streak</Text>
-                    <Text style={styles.resultValue}>{score}</Text>
-                  </View>
-                )}
-              </View>
-
-              <View style={styles.gameOverButtons}>
-                <TouchableOpacity
-                  style={styles.gameOverButton}
-                  onPress={() => navigation.goBack()}
-                >
-                  <LinearGradient
-                    colors={['#D4AF37', '#C5A028']}
-                    style={styles.gameOverButtonGradient}
-                  >
-                    <Text style={styles.gameOverButtonText}>Back to Menu</Text>
-                  </LinearGradient>
-                </TouchableOpacity>
-              </View>
-            </LinearGradient>
-          </View>
-        )}
+        {gameOver && renderGameOver()}
       </LinearGradient>
     </View>
   );
@@ -375,6 +438,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1,
     borderColor: 'rgba(212, 175, 55, 0.3)',
+    backgroundColor: '#1A1A1A',
+  },
+  gameOverTitle: {
+    fontSize: 28,
+    color: '#D4AF37',
+    fontWeight: 'bold',
+    marginBottom: 20,
   },
   resultsContainer: {
     width: '100%',
@@ -383,10 +453,12 @@ const styles = StyleSheet.create({
   resultItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(26, 26, 26, 0.5)',
+    backgroundColor: 'rgba(42, 42, 42, 0.8)',
     padding: 15,
     borderRadius: 10,
     marginVertical: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(212, 175, 55, 0.3)',
   },
   resultLabel: {
     color: '#FFFFFF',
@@ -401,15 +473,14 @@ const styles = StyleSheet.create({
     marginLeft: 10,
   },
   gameOverButtons: {
-    flexDirection: 'row',
-    justifyContent: 'center',
+    width: '100%',
     gap: 15,
     marginTop: 20,
   },
   gameOverButton: {
+    width: '100%',
     borderRadius: 10,
     overflow: 'hidden',
-    width: '60%',
   },
   gameOverButtonGradient: {
     padding: 15,

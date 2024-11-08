@@ -12,6 +12,7 @@ export const AppProvider = ({children}) => {
         gamesPlayed: 0,
         bestTime: null,      
         lastPlayedDate: null,
+        finalScores: [],
     });
 
     const [suddenDeathQuizState, setSuddenDeathQuizState] = useState({
@@ -19,6 +20,9 @@ export const AppProvider = ({children}) => {
         gamesPlayed: 0,
         bestStreak: 0,       
         lastPlayedDate: null,
+        lives: 3,
+        scoreMultiplier: 2,
+        timedScoreBalance: 0
     });
 
     useEffect(() => {
@@ -83,21 +87,30 @@ export const AppProvider = ({children}) => {
                     gamesPlayed: 0,
                     bestTime: null,
                     lastPlayedDate: null,
+                    finalScores: [],
                 };
                 await AsyncStorage.setItem('timedQuizState', JSON.stringify(initialTimedState));
                 setTimedQuizState(initialTimedState);
             }
 
-            // Load Sudden Death state
+            // Load Sudden Death state with lives and multiplier
             const storedSudden = await AsyncStorage.getItem('suddenDeathQuizState');
             if (storedSudden) {
-                setSuddenDeathQuizState(JSON.parse(storedSudden));
+                const parsedState = JSON.parse(storedSudden);
+                // Ensure lives and multiplier exist in stored state
+                setSuddenDeathQuizState({
+                    ...parsedState,
+                    lives: parsedState.lives ?? 3,
+                    scoreMultiplier: parsedState.scoreMultiplier ?? 2
+                });
             } else {
                 const initialSuddenState = {
                     highScore: 0,
                     gamesPlayed: 0,
                     bestStreak: 0,
                     lastPlayedDate: null,
+                    lives: 3,
+                    scoreMultiplier: 2
                 };
                 await AsyncStorage.setItem('suddenDeathQuizState', JSON.stringify(initialSuddenState));
                 setSuddenDeathQuizState(initialSuddenState);
@@ -110,48 +123,98 @@ export const AppProvider = ({children}) => {
     const updateTimedQuizScore = async (results) => {
         try {
             const { correctAnswers, timePerQuestion } = results;
-            const newState = { ...timedQuizState };
+            const newTimedState = { ...timedQuizState };
+            const newSuddenState = { ...suddenDeathQuizState };
             
-            newState.gamesPlayed += 1;
+            newTimedState.gamesPlayed += 1;
             
-            if (correctAnswers > newState.highScore) {
-                newState.highScore = correctAnswers;
+            // Store final score and update balance for sudden death
+            const finalScore = {
+                score: correctAnswers,
+                date: new Date().toISOString(),
+                timePerQuestion
+            };
+            newTimedState.finalScores = [...(newTimedState.finalScores || []), finalScore]
+                .sort((a, b) => b.score - a.score)
+                .slice(0, 10);
+            
+            // Ensure timedScoreBalance is a number
+            newSuddenState.timedScoreBalance = (newSuddenState.timedScoreBalance || 0) + correctAnswers;
+            
+            if (correctAnswers > newTimedState.highScore) {
+                newTimedState.highScore = correctAnswers;
             }
             
-            if (!newState.bestTime || timePerQuestion < newState.bestTime) {
-                newState.bestTime = timePerQuestion;
+            if (!newTimedState.bestTime || timePerQuestion < newTimedState.bestTime) {
+                newTimedState.bestTime = timePerQuestion;
             }
             
-            newState.lastPlayedDate = new Date().toISOString();
+            newTimedState.lastPlayedDate = new Date().toISOString();
             
-            await AsyncStorage.setItem('timedQuizState', JSON.stringify(newState));
-            setTimedQuizState(newState);
+            await AsyncStorage.setItem('timedQuizState', JSON.stringify(newTimedState));
+            await AsyncStorage.setItem('suddenDeathQuizState', JSON.stringify(newSuddenState));
+            setTimedQuizState(newTimedState);
+            setSuddenDeathQuizState(newSuddenState);
         } catch (error) {
             console.error('Error updating timed quiz score:', error);
         }
     };
 
-    const updateSuddenDeathScore = async (results) => {
+    const convertScoreToLives = async (scoresToConvert) => {
         try {
-            const { streak } = results;
+            if (!scoresToConvert || isNaN(scoresToConvert)) {
+                console.log('Invalid score to convert:', scoresToConvert);
+                return 0;
+            }
+
+            const newState = { ...suddenDeathQuizState };
+            const livesToAdd = Math.floor(scoresToConvert / 2); // 2 scores = 1 life
+            const remainingScore = scoresToConvert % 2;
+            
+            if (livesToAdd > 0) {
+                newState.lives = (newState.lives || 0) + livesToAdd;
+                newState.timedScoreBalance = remainingScore;
+                
+                await AsyncStorage.setItem('suddenDeathQuizState', JSON.stringify(newState));
+                setSuddenDeathQuizState(newState);
+                
+                return livesToAdd;
+            }
+            return 0;
+        } catch (error) {
+            console.error('Error converting score to lives:', error);
+            return 0;
+        }
+    };
+
+    const updateSuddenDeathLives = async (action, correctAnswers = 0) => {
+        try {
             const newState = { ...suddenDeathQuizState };
             
-            newState.gamesPlayed += 1;
-            
-            if (streak > newState.highScore) {
-                newState.highScore = streak;
+            if (action === 'use' && newState.lives > 0) {
+                newState.lives -= 1;
+            } else if (action === 'earn' && correctAnswers === 2) {
+                // Add a life for every 2 correct answers
+                newState.lives += 1;
             }
-            
-            if (streak > newState.bestStreak) {
-                newState.bestStreak = streak;
-            }
-            
-            newState.lastPlayedDate = new Date().toISOString();
             
             await AsyncStorage.setItem('suddenDeathQuizState', JSON.stringify(newState));
             setSuddenDeathQuizState(newState);
         } catch (error) {
-            console.error('Error updating sudden death score:', error);
+            console.error('Error updating lives:', error);
+        }
+    };
+
+    const resetSuddenDeathLives = async () => {
+        try {
+            const newState = { 
+                ...suddenDeathQuizState,
+                lives: 3 
+            };
+            await AsyncStorage.setItem('suddenDeathQuizState', JSON.stringify(newState));
+            setSuddenDeathQuizState(newState);
+        } catch (error) {
+            console.error('Error resetting lives:', error);
         }
     };
 
@@ -166,8 +229,10 @@ export const AppProvider = ({children}) => {
         timedQuizState,
         suddenDeathQuizState,
         updateTimedQuizScore,
-        updateSuddenDeathScore,
+        updateSuddenDeathLives,
+        resetSuddenDeathLives,
         getRandomQuestions,
+        convertScoreToLives,
     };
 
     return (
