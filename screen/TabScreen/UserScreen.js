@@ -18,6 +18,7 @@ import RNFS from 'react-native-fs';
 import { useAppContext } from '../../store/appContext';
 import Toast from 'react-native-toast-message';
 
+
 const UserScreen = () => {
 
   const [user, setUser] = useState({
