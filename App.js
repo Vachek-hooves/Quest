@@ -13,6 +13,8 @@ import {
   SuddenQuizScreen,
   PlayQuizScreen,
   FavoriteDetailsScreen,
+  UserWelcomeScreen,
+  
 } from './screen/StackScreen';
 import Icon from 'react-native-vector-icons/Ionicons';
 import LinearGradient from 'react-native-linear-gradient';
@@ -111,6 +113,7 @@ function App() {
             animation: 'slide_from_right',
             animationDuration: 1000,
           }}>
+          <Stack.Screen name="UserWelcomePage" component={UserWelcomeScreen}/>
           <Stack.Screen name="TabNavigator" component={TabNavigator} />
           <Stack.Screen name="TimeQuizScreen" component={TimeQuizScreen} />
           <Stack.Screen name="SuddenQuizScreen" component={SuddenQuizScreen} />
