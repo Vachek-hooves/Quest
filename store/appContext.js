@@ -13,6 +13,10 @@ export const AppProvider = ({children}) => {
         bestTime: null,      
         lastPlayedDate: null,
         finalScores: [],
+        averageScore: 0,
+        totalScore: 0,
+        monthlyHighScore: 0,
+        weeklyHighScore: 0,
     });
 
     const [suddenDeathQuizState, setSuddenDeathQuizState] = useState({
@@ -22,7 +26,11 @@ export const AppProvider = ({children}) => {
         lastPlayedDate: null,
         lives: 3,
         scoreMultiplier: 2,
-        timedScoreBalance: 0
+        timedScoreBalance: 0,
+        averageStreak: 0,
+        totalGamesPlayed: 0,
+        monthlyBestStreak: 0,
+        weeklyBestStreak: 0,
     });
 
     useEffect(() => {
@@ -88,6 +96,10 @@ export const AppProvider = ({children}) => {
                     bestTime: null,
                     lastPlayedDate: null,
                     finalScores: [],
+                    averageScore: 0,
+                    totalScore: 0,
+                    monthlyHighScore: 0,
+                    weeklyHighScore: 0,
                 };
                 await AsyncStorage.setItem('timedQuizState', JSON.stringify(initialTimedState));
                 setTimedQuizState(initialTimedState);
@@ -127,19 +139,9 @@ export const AppProvider = ({children}) => {
             const newSuddenState = { ...suddenDeathQuizState };
             
             newTimedState.gamesPlayed += 1;
-            
-            // Store final score and update balance for sudden death
-            const finalScore = {
-                score: correctAnswers,
-                date: new Date().toISOString(),
-                timePerQuestion
-            };
-            newTimedState.finalScores = [...(newTimedState.finalScores || []), finalScore]
-                .sort((a, b) => b.score - a.score)
-                .slice(0, 10);
-            
-            // Ensure timedScoreBalance is a number
-            newSuddenState.timedScoreBalance = (newSuddenState.timedScoreBalance || 0) + correctAnswers;
+            newTimedState.totalScore += correctAnswers;
+            newTimedState.averageScore = newTimedState.totalScore / newTimedState.gamesPlayed;
+            newTimedState.lastPlayedDate = new Date().toISOString();
             
             if (correctAnswers > newTimedState.highScore) {
                 newTimedState.highScore = correctAnswers;
@@ -149,7 +151,30 @@ export const AppProvider = ({children}) => {
                 newTimedState.bestTime = timePerQuestion;
             }
             
-            newTimedState.lastPlayedDate = new Date().toISOString();
+            const currentDate = new Date();
+            const lastPlayedDate = new Date(newTimedState.lastPlayedDate);
+            const isThisWeek = currentDate - lastPlayedDate < 7 * 24 * 60 * 60 * 1000;
+            const isThisMonth = currentDate.getMonth() === lastPlayedDate.getMonth();
+            
+            if (isThisWeek && correctAnswers > newTimedState.weeklyHighScore) {
+                newTimedState.weeklyHighScore = correctAnswers;
+            }
+            
+            if (isThisMonth && correctAnswers > newTimedState.monthlyHighScore) {
+                newTimedState.monthlyHighScore = correctAnswers;
+            }
+            
+            const finalScore = {
+                score: correctAnswers,
+                date: new Date().toISOString(),
+                timePerQuestion
+            };
+            
+            newTimedState.finalScores = [...(newTimedState.finalScores || []), finalScore]
+                .sort((a, b) => b.score - a.score)
+                .slice(0, 10);
+            
+            newSuddenState.timedScoreBalance = (newSuddenState.timedScoreBalance || 0) + correctAnswers;
             
             await AsyncStorage.setItem('timedQuizState', JSON.stringify(newTimedState));
             await AsyncStorage.setItem('suddenDeathQuizState', JSON.stringify(newSuddenState));
@@ -223,6 +248,29 @@ export const AppProvider = ({children}) => {
         return shuffled.slice(0, count);
     };
 
+    const getGameStatistics = () => {
+        return {
+            timed: {
+                gamesPlayed: timedQuizState.gamesPlayed,
+                highScore: timedQuizState.highScore,
+                averageScore: Math.round(timedQuizState.averageScore * 10) / 10,
+                bestTime: timedQuizState.bestTime ? `${timedQuizState.bestTime.toFixed(1)}s` : 'N/A',
+                lastPlayed: timedQuizState.lastPlayedDate ? new Date(timedQuizState.lastPlayedDate).toLocaleDateString() : 'Never',
+                weeklyHighScore: timedQuizState.weeklyHighScore,
+                monthlyHighScore: timedQuizState.monthlyHighScore,
+            },
+            suddenDeath: {
+                gamesPlayed: suddenDeathQuizState.gamesPlayed,
+                highScore: suddenDeathQuizState.highScore,
+                bestStreak: suddenDeathQuizState.bestStreak,
+                averageStreak: Math.round(suddenDeathQuizState.averageStreak * 10) / 10,
+                lastPlayed: suddenDeathQuizState.lastPlayedDate ? new Date(suddenDeathQuizState.lastPlayedDate).toLocaleDateString() : 'Never',
+                weeklyBestStreak: suddenDeathQuizState.weeklyBestStreak,
+                monthlyBestStreak: suddenDeathQuizState.monthlyBestStreak,
+            }
+        };
+    };
+
     const value = {
         userMarkers,
         addUserMarker,
@@ -233,6 +281,7 @@ export const AppProvider = ({children}) => {
         resetSuddenDeathLives,
         getRandomQuestions,
         convertScoreToLives,
+        getGameStatistics,
     };
 
     return (

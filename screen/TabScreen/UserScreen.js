@@ -15,6 +15,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import LottieView from 'lottie-react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import RNFS from 'react-native-fs';
+import { useAppContext } from '../../store/appContext';
 
 const UserScreen = () => {
 
@@ -28,6 +29,8 @@ const UserScreen = () => {
     image: null,
   });
   const [isLoading, setIsLoading] = useState(true);
+  const { getGameStatistics } = useAppContext();
+  const stats = getGameStatistics();
 
   useEffect(() => {
     loadUserData();
@@ -98,6 +101,66 @@ const UserScreen = () => {
     setShowEditModal(true);
   };
 
+  const renderStatistics = () => {
+    return (
+      <View style={styles.statsContainer}>
+        <Text style={styles.statsTitle}>Game Statistics</Text>
+        
+        {/* Timed Challenge Stats */}
+        <LinearGradient
+          colors={['#2A2A2A', '#1A1A1A']}
+          style={styles.statsCard}
+        >
+          <Text style={styles.gameTitle}>Timed Challenge</Text>
+          <View style={styles.statRow}>
+            <Text style={styles.statLabel}>Games Played:</Text>
+            <Text style={styles.statValue}>{stats.timed.gamesPlayed}</Text>
+          </View>
+          <View style={styles.statRow}>
+            <Text style={styles.statLabel}>High Score:</Text>
+            <Text style={styles.statValue}>{stats.timed.highScore}</Text>
+          </View>
+          <View style={styles.statRow}>
+            <Text style={styles.statLabel}>Best Time:</Text>
+            <Text style={styles.statValue}>{stats.timed.bestTime}</Text>
+          </View>
+          <View style={styles.statRow}>
+            <Text style={styles.statLabel}>Average Score:</Text>
+            <Text style={styles.statValue}>{stats.timed.averageScore}</Text>
+          </View>
+          <View style={styles.statRow}>
+            <Text style={styles.statLabel}>Last Played:</Text>
+            <Text style={styles.statValue}>{stats.timed.lastPlayed}</Text>
+          </View>
+        </LinearGradient>
+
+        {/* Sudden Death Stats */}
+        <LinearGradient
+          colors={['#2A2A2A', '#1A1A1A']}
+          style={styles.statsCard}
+        >
+          <Text style={styles.gameTitle}>Sudden Death</Text>
+          <View style={styles.statRow}>
+            <Text style={styles.statLabel}>Games Played:</Text>
+            <Text style={styles.statValue}>{stats.suddenDeath.gamesPlayed}</Text>
+          </View>
+          <View style={styles.statRow}>
+            <Text style={styles.statLabel}>Best Streak:</Text>
+            <Text style={styles.statValue}>{stats.suddenDeath.bestStreak}</Text>
+          </View>
+          <View style={styles.statRow}>
+            <Text style={styles.statLabel}>Average Streak:</Text>
+            <Text style={styles.statValue}>{stats.suddenDeath.averageStreak}</Text>
+          </View>
+          <View style={styles.statRow}>
+            <Text style={styles.statLabel}>Last Played:</Text>
+            <Text style={styles.statValue}>{stats.suddenDeath.lastPlayed}</Text>
+          </View>
+        </LinearGradient>
+      </View>
+    );
+  };
+
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
@@ -147,6 +210,7 @@ const UserScreen = () => {
             loop
             style={styles.lottieAnimation}
           />
+          {renderStatistics()}
         </ScrollView>
       </LinearGradient>
 
@@ -364,6 +428,45 @@ const styles = StyleSheet.create({
   },
   saveButtonText: {
     color: '#1A1A1A',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  statsContainer: {
+    width: '100%',
+    marginTop: 30,
+    padding: 20,
+  },
+  statsTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#D4AF37',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  statsCard: {
+    borderRadius: 15,
+    padding: 20,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#D4AF37',
+  },
+  gameTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#D4AF37',
+    marginBottom: 15,
+  },
+  statRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  statLabel: {
+    color: '#FFFFFF',
+    fontSize: 16,
+  },
+  statValue: {
+    color: '#D4AF37',
     fontSize: 16,
     fontWeight: 'bold',
   },
