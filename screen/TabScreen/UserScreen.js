@@ -247,15 +247,15 @@ const styles = StyleSheet.create({
     backgroundColor: '#1A1A1A',
   },
   lottieAnimation: {
-    width: 350, // Reduce from 400 to prevent scaling artifacts
-    height: 350,
+    width: 400, // Reduce from 400 to prevent scaling artifacts
+    height: 400,
     marginVertical: 20,
     alignSelf: 'center',
     transform: [{scale: 1}], // Add this to prevent unwanted scaling
   },
   profileImage: {
-    width: 150,
-    height: 150,
+    width: 300,
+    height: 200,
     borderRadius: 75,
     marginBottom: 20,
     borderWidth: 3,
