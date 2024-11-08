@@ -11,7 +11,7 @@ import { Animated } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 
 const MapScreen = () => {
-  const { userMarkers, addUserMarker } = useAppContext();
+  const { userMarkers, addUserMarker, favorites, toggleFavorite } = useAppContext();
   const [selectedAttraction, setSelectedAttraction] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -130,6 +130,13 @@ const MapScreen = () => {
   const handleCreatePress = () => {
     setShowCreatePopup(false);
     setShowCreateModal(true);
+  };
+
+  const isFavorite = (place) => {
+    return favorites.some(fav => 
+      fav.id === place.id && 
+      fav.location === place.location
+    );
   };
 
   return (
@@ -272,11 +279,22 @@ const MapScreen = () => {
               source={getImageSource(selectedAttraction.image)}
               style={styles.modalBackground}
               blurRadius={2}>
+                
               <LinearGradient
                 colors={['rgba(0,0,0,0.7)', 'rgba(0,0,0,0.9)']}
                 style={styles.gradientOverlay}>
                 <ScrollView>
                   <View style={styles.modalContent}>
+                    <TouchableOpacity 
+                      style={styles.favoriteButton}
+                      onPress={() => toggleFavorite(selectedAttraction)}>
+                      <Icon 
+                        name={isFavorite(selectedAttraction) ? "heart" : "heart-outline"} 
+                        size={40} 
+                        color="#D4AF37" 
+                      />
+                    </TouchableOpacity>
+                    
                     <Image 
                       source={getImageSource(selectedAttraction.image)}
                       style={styles.modalImage}
@@ -540,7 +558,7 @@ const additionalStyles = {
   },
   modalContent: {
     padding: 20,
-    paddingTop: 40,
+    paddingTop: 80,
     paddingBottom: 30, // Add more padding at bottom for the back button
   },
   modalImage: {
@@ -609,6 +627,16 @@ const additionalStyles = {
     color: '#1A1A1A',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  favoriteButton: {
+    position: 'absolute',
+    top: 80,
+    right: 20,
+    zIndex: 1,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    padding: 10,
+    borderRadius: 20,
+    margin:5
   },
 };
 

@@ -2,8 +2,17 @@ import {AppProvider} from './store/appContext';
 import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
-import {UserScreen, MapScreen, QuizChooseScreen, FavoritePlaces} from './screen/TabScreen';
-import {TimeQuizScreen, SuddenQuizScreen, PlayQuizScreen} from './screen/StackScreen';
+import {
+  UserScreen,
+  MapScreen,
+  QuizChooseScreen,
+  FavoritePlaces,
+} from './screen/TabScreen';
+import {
+  TimeQuizScreen,
+  SuddenQuizScreen,
+  PlayQuizScreen,
+} from './screen/StackScreen';
 import Icon from 'react-native-vector-icons/Ionicons';
 import LinearGradient from 'react-native-linear-gradient';
 
@@ -12,13 +21,13 @@ const Tab = createBottomTabNavigator();
 
 const TabNavigator = () => {
   return (
-    <Tab.Navigator 
+    <Tab.Navigator
       screenOptions={({route}) => ({
         headerShown: false,
         animation: 'fade',
         animationDuration: 1000,
         tabBarStyle: {
-          height:100,
+          height: 100,
           backgroundColor: '#1A1A1A',
           borderTopWidth: 0,
           elevation: 0,
@@ -28,9 +37,9 @@ const TabNavigator = () => {
         tabBarBackground: () => (
           <LinearGradient
             colors={['#1A1A1A', '#2A2A2A']}
-            style={{ height: '100%' }}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 0, y: 1 }}
+            style={{height: '100%'}}
+            start={{x: 0, y: 0}}
+            end={{x: 0, y: 1}}
           />
         ),
         tabBarIcon: ({focused, color, size}) => {
@@ -59,28 +68,32 @@ const TabNavigator = () => {
           padding: 5,
         },
       })}>
-        <Tab.Screen 
-          name="UserScreen" 
-          component={UserScreen}
-          options={{
-            tabBarLabel: 'Profile'
-          }}
-        />
-      <Tab.Screen 
-        name="MapScreen" 
+      <Tab.Screen
+        name="UserScreen"
+        component={UserScreen}
+        options={{
+          tabBarLabel: 'Profile',
+        }}
+      />
+      <Tab.Screen
+        name="MapScreen"
         component={MapScreen}
         options={{
-          tabBarLabel: 'Map'
+          tabBarLabel: 'Map',
         }}
       />
-      <Tab.Screen 
-        name="QuizChooseScreen" 
+      <Tab.Screen
+        name="QuizChooseScreen"
         component={QuizChooseScreen}
         options={{
-          tabBarLabel: 'Quiz'
+          tabBarLabel: 'Quiz',
         }}
       />
-      <Tab.Screen name="FavoritePlaces" component={FavoritePlaces} options={{tabBarLabel: 'Favorites'}} />
+      <Tab.Screen
+        name="FavoritePlaces"
+        component={FavoritePlaces}
+        options={{tabBarLabel: 'Favorites'}}
+      />
     </Tab.Navigator>
   );
 };
@@ -89,11 +102,16 @@ function App() {
   return (
     <AppProvider>
       <NavigationContainer>
-        <Stack.Navigator screenOptions={{headerShown: false, animation: 'slide_from_right', animationDuration: 1000}}>
-          <Stack.Screen name='TabNavigator' component={TabNavigator} />
-          <Stack.Screen name='TimeQuizScreen' component={TimeQuizScreen} />
-          <Stack.Screen name='SuddenQuizScreen' component={SuddenQuizScreen} />
-          <Stack.Screen name='PlayQuizScreen' component={PlayQuizScreen} />
+        <Stack.Navigator
+          screenOptions={{
+            headerShown: false,
+            animation: 'slide_from_right',
+            animationDuration: 1000,
+          }}>
+          <Stack.Screen name="TabNavigator" component={TabNavigator} />
+          <Stack.Screen name="TimeQuizScreen" component={TimeQuizScreen} />
+          <Stack.Screen name="SuddenQuizScreen" component={SuddenQuizScreen} />
+          <Stack.Screen name="PlayQuizScreen" component={PlayQuizScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </AppProvider>

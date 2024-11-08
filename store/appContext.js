@@ -33,9 +33,12 @@ export const AppProvider = ({children}) => {
         weeklyBestStreak: 0,
     });
 
+    const [favorites, setFavorites] = useState([]);
+
     useEffect(() => {
         loadUserMarkers();
         loadQuizStates();
+        loadFavorites();
     }, []);
 
     // User Markers functions
@@ -297,6 +300,38 @@ export const AppProvider = ({children}) => {
         };
     };
 
+    const loadFavorites = async () => {
+        try {
+            const stored = await AsyncStorage.getItem('favorites');
+            if (stored) {
+                setFavorites(JSON.parse(stored));
+            }
+        } catch (error) {
+            console.error('Error loading favorites:', error);
+        }
+    };
+
+    const toggleFavorite = async (place) => {
+        try {
+            const newFavorites = [...favorites];
+            const index = newFavorites.findIndex(fav => 
+                fav.id === place.id && 
+                fav.location === place.location
+            );
+
+            if (index >= 0) {
+                newFavorites.splice(index, 1);
+            } else {
+                newFavorites.push(place);
+            }
+
+            await AsyncStorage.setItem('favorites', JSON.stringify(newFavorites));
+            setFavorites(newFavorites);
+        } catch (error) {
+            console.error('Error updating favorites:', error);
+        }
+    };
+
     const value = {
         userMarkers,
         addUserMarker,
@@ -308,6 +343,8 @@ export const AppProvider = ({children}) => {
         getRandomQuestions,
         convertScoreToLives,
         getGameStatistics,
+        favorites,
+        toggleFavorite,
     };
 
     return (
