@@ -29,6 +29,7 @@ const UserScreen = () => {
     image: null,
   });
   const [isLoading, setIsLoading] = useState(true);
+  const [hasAccount, setHasAccount] = useState(false);
   const { getGameStatistics } = useAppContext();
   const stats = getGameStatistics();
 
@@ -42,6 +43,9 @@ const UserScreen = () => {
       if (userData) {
         const parsedUser = JSON.parse(userData);
         setUser(parsedUser);
+        setHasAccount(true);
+      } else {
+        setHasAccount(false);
       }
       setIsLoading(false);
     } catch (error) {
@@ -90,6 +94,7 @@ const UserScreen = () => {
 
       await AsyncStorage.setItem('userData', JSON.stringify(updatedUser));
       setUser(updatedUser);
+      setHasAccount(true);
       setShowEditModal(false);
     } catch (error) {
       console.error('Error saving user data:', error);
@@ -201,16 +206,22 @@ const UserScreen = () => {
             <TouchableOpacity
               style={styles.editButtonInner}
               onPress={handleEdit}>
-              <Text style={styles.editButtonText}>Edit Profile</Text>
+              <Text style={styles.editButtonText}>
+                {hasAccount ? 'Edit Profile' : 'Create Profile'}
+              </Text>
             </TouchableOpacity>
           </LinearGradient>
-          <LottieView
-            source={require('../../assets/animation/login.json')}
-            autoPlay
-            loop
-            style={styles.lottieAnimation}
-          />
-          {renderStatistics()}
+
+          {!hasAccount ? (
+            <LottieView
+              source={require('../../assets/animation/login.json')}
+              autoPlay
+              loop
+              style={styles.lottieAnimation}
+            />
+          ) : (
+            renderStatistics()
+          )}
         </ScrollView>
       </LinearGradient>
 
