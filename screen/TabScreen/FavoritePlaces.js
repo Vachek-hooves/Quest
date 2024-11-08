@@ -4,8 +4,10 @@ import { useAppContext } from '../../store/appContext';
 import LinearGradient from 'react-native-linear-gradient';
 import Icon from 'react-native-vector-icons/Ionicons';
 import RNFS from 'react-native-fs';
+import { useNavigation } from '@react-navigation/native';
 
 const FavoritePlaces = () => {
+    const navigation = useNavigation();
     const { favorites, toggleFavorite } = useAppContext();
 
     const getImageSource = (image) => {
@@ -13,6 +15,10 @@ const FavoritePlaces = () => {
             return { uri: `file://${image}` };
         }
         return image;
+    };
+
+    const handlePlacePress = (place) => {
+        navigation.navigate('FavoriteDetailsScreen', { place });
     };
 
     if (favorites.length === 0) {
@@ -35,7 +41,11 @@ const FavoritePlaces = () => {
         <SafeAreaView style={{flex:1}}>
             <ScrollView contentContainerStyle={styles.scrollContent}>
                 {favorites.map((place) => (
-                    <View key={place.id} style={styles.card}>
+                    <TouchableOpacity 
+                        key={place.id} 
+                        style={styles.card}
+                        onPress={() => handlePlacePress(place)}
+                    >
                         <Image 
                             source={getImageSource(place.image)}
                             style={styles.cardImage}
@@ -47,12 +57,15 @@ const FavoritePlaces = () => {
                             <Text style={styles.cardTitle}>{place.location}</Text>
                             <TouchableOpacity
                                 style={styles.favoriteButton}
-                                onPress={() => toggleFavorite(place)}
+                                onPress={(e) => {
+                                    e.stopPropagation();
+                                    toggleFavorite(place);
+                                }}
                             >
                                 <Icon name="heart" size={24} color="#D4AF37" />
                             </TouchableOpacity>
                         </LinearGradient>
-                    </View>
+                    </TouchableOpacity>
                 ))}
             </ScrollView>
         </SafeAreaView>

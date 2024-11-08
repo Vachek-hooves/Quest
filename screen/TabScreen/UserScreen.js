@@ -129,10 +129,10 @@ const UserScreen = () => {
             <Text style={styles.statLabel}>Best Time:</Text>
             <Text style={styles.statValue}>{stats.timed.bestTime}</Text>
           </View>
-          <View style={styles.statRow}>
+          {/* <View style={styles.statRow}>
             <Text style={styles.statLabel}>Average Score:</Text>
             <Text style={styles.statValue}>{stats.timed.averageScore}</Text>
-          </View>
+          </View> */}
           <View style={styles.statRow}>
             <Text style={styles.statLabel}>Last Played:</Text>
             <Text style={styles.statValue}>{stats.timed.lastPlayed}</Text>
@@ -153,10 +153,10 @@ const UserScreen = () => {
             <Text style={styles.statLabel}>Best Streak:</Text>
             <Text style={styles.statValue}>{stats.suddenDeath.bestStreak}</Text>
           </View>
-          <View style={styles.statRow}>
+          {/* <View style={styles.statRow}>
             <Text style={styles.statLabel}>Average Streak:</Text>
             <Text style={styles.statValue}>{stats.suddenDeath.averageStreak}</Text>
-          </View>
+          </View> */}
           <View style={styles.statRow}>
             <Text style={styles.statLabel}>Last Played:</Text>
             <Text style={styles.statValue}>{stats.suddenDeath.lastPlayed}</Text>

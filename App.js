@@ -12,6 +12,7 @@ import {
   TimeQuizScreen,
   SuddenQuizScreen,
   PlayQuizScreen,
+  FavoriteDetailsScreen,
 } from './screen/StackScreen';
 import Icon from 'react-native-vector-icons/Ionicons';
 import LinearGradient from 'react-native-linear-gradient';
@@ -112,6 +113,7 @@ function App() {
           <Stack.Screen name="TimeQuizScreen" component={TimeQuizScreen} />
           <Stack.Screen name="SuddenQuizScreen" component={SuddenQuizScreen} />
           <Stack.Screen name="PlayQuizScreen" component={PlayQuizScreen} />
+          <Stack.Screen name='FavoriteDetailsScreen' component={FavoriteDetailsScreen}/>
         </Stack.Navigator>
       </NavigationContainer>
     </AppProvider>
