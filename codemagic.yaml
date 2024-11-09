@@ -2,7 +2,7 @@ workflows:
   adventure-through-rhodes-workflow:
     name: Advanture Through Rhodes
     max_build_duration: 120
-    intergrations:
+    integrations:
       app_store_connect: RhodesCodemagicApiKey
     environment:
       ios_signing:
