@@ -1,4 +1,4 @@
-workflow:
+workflows:
   adventure-through-rhodes-workflow:
     name: Advanture Through Rhodes
     max_build_duration: 120
