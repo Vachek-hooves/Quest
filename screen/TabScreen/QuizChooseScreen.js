@@ -3,6 +3,7 @@ import React, { useEffect, useRef } from 'react';
 import LinearGradient from 'react-native-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
+import TabLayout from '../../components/layout/TabLayout';
 
 const QuizChooseScreen = () => {
   const navigation = useNavigation();
@@ -39,12 +40,13 @@ const QuizChooseScreen = () => {
   }, []);
 
   return (
+    <TabLayout>
     <View style={styles.container}>
-      <LinearGradient
+      {/* <LinearGradient
         colors={['#1A1A1A', '#2A2A2A', '#AA8A1B']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        style={styles.gradient}>
+        style={styles.gradient}> */}
         <View style={styles.content}>
           <LinearGradient
             colors={['#D4AF37', '#C5A028', '#AA8A1B']}
@@ -108,8 +110,8 @@ const QuizChooseScreen = () => {
             </LinearGradient>
           </TouchableOpacity>
         </View>
-      </LinearGradient>
-    </View>
+      {/* </LinearGradient> */}
+    </View></TabLayout>
   );
 };
 
@@ -118,7 +120,7 @@ export default QuizChooseScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1A1A1A',
+    // backgroundColor: '#1A1A1A',
     
   },
   gradient: {

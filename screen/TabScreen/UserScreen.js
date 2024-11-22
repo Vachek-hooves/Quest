@@ -17,6 +17,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import RNFS from 'react-native-fs';
 import { useAppContext } from '../../store/appContext';
 import Toast from 'react-native-toast-message';
+import TabLayout from '../../components/layout/TabLayout';
 
 
 const UserScreen = () => {
@@ -157,14 +158,15 @@ const UserScreen = () => {
 
   const renderStatistics = () => {
     return (
+      <TabLayout>
       <View style={styles.statsContainer}>
         <Text style={styles.statsTitle}>Game Statistics</Text>
         
         {/* Timed Challenge Stats */}
-        <LinearGradient
+        {/* <LinearGradient
           colors={['#2A2A2A', '#1A1A1A']}
           style={styles.statsCard}
-        >
+        > */}
           <Text style={styles.gameTitle}>Timed Challenge</Text>
           <View style={styles.statRow}>
             <Text style={styles.statLabel}>Games Played:</Text>
@@ -174,10 +176,10 @@ const UserScreen = () => {
             <Text style={styles.statLabel}>High Score:</Text>
             <Text style={styles.statValue}>{stats.timed.highScore}</Text>
           </View>
-          <View style={styles.statRow}>
+          {/* <View style={styles.statRow}>
             <Text style={styles.statLabel}>Best Time:</Text>
             <Text style={styles.statValue}>{stats.timed.bestTime}</Text>
-          </View>
+          </View> */}
           {/* <View style={styles.statRow}>
             <Text style={styles.statLabel}>Average Score:</Text>
             <Text style={styles.statValue}>{stats.timed.averageScore}</Text>
@@ -186,13 +188,13 @@ const UserScreen = () => {
             <Text style={styles.statLabel}>Last Played:</Text>
             <Text style={styles.statValue}>{stats.timed.lastPlayed}</Text>
           </View>
-        </LinearGradient>
+        {/* </LinearGradient> */}
 
         {/* Sudden Death Stats */}
-        <LinearGradient
+        {/* <LinearGradient
           colors={['#2A2A2A', '#1A1A1A']}
           style={styles.statsCard}
-        >
+        > */}
           <Text style={styles.gameTitle}>Sudden Death</Text>
           <View style={styles.statRow}>
             <Text style={styles.statLabel}>Games Played:</Text>
@@ -210,8 +212,9 @@ const UserScreen = () => {
             <Text style={styles.statLabel}>Last Played:</Text>
             <Text style={styles.statValue}>{stats.suddenDeath.lastPlayed}</Text>
           </View>
-        </LinearGradient>
+        {/* </LinearGradient> */}
       </View>
+      </TabLayout>
     );
   };
 
@@ -273,12 +276,13 @@ const UserScreen = () => {
   }
 
   return (
+    <TabLayout>
     <View style={styles.container}>
-      <LinearGradient
+      {/* <LinearGradient
         colors={['#1A1A1A', '#2A2A2A', '#AA8A1B']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        style={styles.gradient}>
+        style={styles.gradient}> */}
         <ScrollView contentContainerStyle={styles.contentContainer}>
           {user.image ? (
             <Image
@@ -316,7 +320,7 @@ const UserScreen = () => {
             renderStatistics()
           )}
         </ScrollView>
-      </LinearGradient>
+      {/* </LinearGradient> */}
 
       <Modal
         animationType="slide"
@@ -329,9 +333,9 @@ const UserScreen = () => {
             onPress={() => setShowEditModal(false)}>
             <Icon name="close-circle" size={32} color="#D4AF37" />
           </TouchableOpacity>
-          <LinearGradient
+          {/* <LinearGradient
             colors={['#1A1A1A', '#2A2A2A', '#AA8A1B']}
-            style={styles.modalGradient}>
+            style={styles.modalGradient}> */}
             <ScrollView>
               <View style={styles.modalContent}>
                 <Text style={styles.modalTitle}>Edit Profile</Text>
@@ -393,10 +397,11 @@ const UserScreen = () => {
                 </View>
               </View>
             </ScrollView>
-          </LinearGradient>
+          {/* </LinearGradient> */}
         </View>
       </Modal>
     </View>
+    </TabLayout>
   );
 };
 

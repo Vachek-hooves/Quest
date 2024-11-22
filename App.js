@@ -19,8 +19,8 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import LinearGradient from 'react-native-linear-gradient';
 import Toast from 'react-native-toast-message';
 import {toastConfig} from './config/toastConfiguration';
-import {TouchableOpacity,AppState} from 'react-native';
-import {useState,useEffect} from 'react';
+import {TouchableOpacity, AppState} from 'react-native';
+import {useState, useEffect} from 'react';
 import {
   toggleBackgroundMusic,
   setupPlayer,
